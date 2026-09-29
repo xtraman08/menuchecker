@@ -28,10 +28,20 @@ if (!existsSync(ENV_FILE)) {
 loadEnv();
 
 const project = ['-p', 'fare-e2e'];
-// Every spec signs up fresh anonymous users from one IP, which trips the per-IP
-// sign-up limit meant for real clients. Raise only that one for the e2e stack;
-// scan/decode limits stay as configured so the rate-limit specs remain meaningful.
-process.env.RATE_LIMIT_AUTH_PER_HOUR = process.env.E2E_RATE_LIMIT_AUTH_PER_HOUR || '1000';
+// Rate limits for the e2e stack only. All Playwright workers share one IP, so the
+// per-IP sign-up and global limits are lifted. The per-user scan limit is set low
+// and the same value reaches both the api container (compose interpolation) and
+// Playwright (the 429 spec reads it), since both inherit process.env.
+// Override any of them with E2E_<NAME>.
+const E2E_LIMITS = {
+  RATE_LIMIT_AUTH_PER_HOUR: '100000',
+  RATE_LIMIT_GLOBAL_PER_MINUTE: '100000',
+  RATE_LIMIT_DECODE_PER_HOUR: '1000',
+  RATE_LIMIT_SCAN_PER_HOUR: '3',
+};
+for (const [name, value] of Object.entries(E2E_LIMITS)) {
+  process.env[name] = process.env[`E2E_${name}`] || value;
+}
 const apiUrl = `http://localhost:${process.env.API_PORT || 4000}`;
 const webUrl = `http://localhost:${process.env.WEB_PORT || 8080}`;
 
@@ -56,6 +66,8 @@ try {
   if (installBrowsers) {
     await run('npx', ['playwright', 'install', 'chromium'], { cwd: path.join(ROOT, 'e2e') });
   }
+  // Start from a fresh database even if a previous --keep run left the stack up.
+  await compose([...project, 'down', '-v', '--remove-orphans']);
   if (build) await compose([...project, 'build']);
   await compose([...project, 'up', '-d', '--wait', 'db']);
   await compose([...project, 'run', '--rm', 'migrate']);

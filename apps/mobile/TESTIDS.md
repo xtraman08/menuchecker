@@ -84,7 +84,7 @@ Layout order: photo, name, price, anchor, description, signals, note, provenance
   - `dish-card-match-score-<id>` – number 0–100 (preliminary/confident only)
   - `dish-card-match-state-<id>` – "Early estimate" | "Based on solid feedback"
   - `dish-card-match-reason-<id>` – `matchExplanation` text when the API sends one (may appear while unrated)
-  - `dish-card-match-caveat-<id>` – "Dietary info is AI-generated — verify with the restaurant", shown when `matchExplanationKind === "dietary"` or the explanation mentions a diet/allergen
+  - `dish-card-match-caveat-<id>` – "Dietary info is AI-generated — verify with the restaurant", shown only when `matchExplanationKind === "dietary"`
 - `dish-card-add-<id>` – "Add to order" / "Add another (N)"
 - `dish-card-feedback-<id>` – "Rate this dish" → feedback screen
 

@@ -25,6 +25,8 @@ const card = {
   matchScore: null,
   matchState: 'unrated',
   matchExplanation: null,
+  matchExplanationKind: null,
+  dietaryTags: ['gluten_free'],
   feedbackUp: 0,
   feedbackDown: 0,
 };
@@ -43,6 +45,10 @@ describe('shared schemas', () => {
   it('rejects unknown source / match state', () => {
     expect(dishCardSchema.safeParse({ ...card, source: 'guessed' }).success).toBe(false);
     expect(dishCardSchema.safeParse({ ...card, matchState: 'maybe' }).success).toBe(false);
+    expect(dishCardSchema.safeParse({ ...card, matchExplanationKind: 'vibes' }).success).toBe(
+      false,
+    );
+    expect(dishCardSchema.safeParse({ ...card, dietaryTags: ['paleo'] }).success).toBe(false);
   });
 
   it('validates decoded dish output strictly and normalises ingredients', () => {

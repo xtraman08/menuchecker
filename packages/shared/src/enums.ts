@@ -18,6 +18,14 @@ export const matchStateSchema = z.enum(['unrated', 'preliminary', 'confident']);
 export type MatchState = z.infer<typeof matchStateSchema>;
 
 /**
+ * What `matchExplanation` is about. `dietary` = the dish isn't marked as meeting one of the
+ * diner's dietary restrictions (show the "verify with the restaurant" caveat). `feedback` is
+ * reserved for later; the MVP engine never emits it.
+ */
+export const matchExplanationKindSchema = z.enum(['dietary', 'ingredients', 'spice', 'feedback']);
+export type MatchExplanationKind = z.infer<typeof matchExplanationKindSchema>;
+
+/**
  * Canonical dietary vocabulary. Used both for a diner's `dietaryRestrictions`
  * and for a dish's `dietaryTags` (tags assert the dish IS compatible, e.g. a
  * dish tagged `vegan` is suitable for a vegan diner).

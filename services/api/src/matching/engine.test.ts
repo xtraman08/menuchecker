@@ -50,6 +50,7 @@ describe('computeMatch — unrated', () => {
       matchScore: null,
       matchState: 'unrated',
       explanation: null,
+      explanationKind: null,
     });
   });
   it('returns a null score below the feedback threshold even with a profile', () => {
@@ -65,6 +66,7 @@ describe('computeMatch — unrated', () => {
     expect(r.matchScore).toBeNull();
     expect(r.matchState).toBe('unrated');
     expect(r.explanation).toMatch(/Not marked vegan/);
+    expect(r.explanationKind).toBe('dietary');
   });
 });
 
@@ -78,6 +80,7 @@ describe('computeMatch — dietary hard filter', () => {
       matchScore: 0,
       matchState: 'preliminary',
       explanation: 'Not marked vegetarian — check with the restaurant.',
+      explanationKind: 'dietary',
     });
   });
   it('lists every conflicting restriction', () => {
@@ -179,6 +182,7 @@ describe('computeMatch — weighted score', () => {
     expect(r.matchScore).toBe(Math.round((0.35 * 1 + 0.35 * 0.75 + 0.3 * (5 / 6)) * 100));
     expect(r.matchState).toBe('preliminary');
     expect(r.explanation).toBe('Has lentils, which you like.');
+    expect(r.explanationKind).toBe('ingredients');
   });
   it('scores a spicy, avoided, disliked dish low and explains why', () => {
     const r = computeMatch(
@@ -188,6 +192,7 @@ describe('computeMatch — weighted score', () => {
     expect(r.matchScore).toBeLessThan(10);
     expect(r.matchState).toBe('confident');
     expect(r.explanation).toBe('Contains onion, which you avoid. Spicier than you usually like.');
+    expect(r.explanationKind).toBe('ingredients');
   });
   it('stays within 0..100 across the input space', () => {
     for (let spice = 0; spice <= 3; spice++)
@@ -205,6 +210,16 @@ describe('computeMatch — weighted score', () => {
           }
   });
   it('returns null explanation when there is nothing notable', () => {
-    expect(computeMatch(profile(), dish()).explanation).toBeNull();
+    expect(computeMatch(profile(), dish())).toMatchObject({
+      explanation: null,
+      explanationKind: null,
+    });
+  });
+  it('labels a spice-only explanation as spice', () => {
+    const r = computeMatch(profile({ spiceTolerance: 0 }), dish({ spice: 2 }));
+    expect(r).toMatchObject({
+      explanation: 'Spicier than you usually like.',
+      explanationKind: 'spice',
+    });
   });
 });

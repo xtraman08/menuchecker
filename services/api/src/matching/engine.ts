@@ -3,6 +3,7 @@ import {
   DIETARY_LABELS,
   MATCH_CONFIG,
   type DietaryRestriction,
+  type MatchExplanationKind,
   type MatchState,
   type TasteProfile,
 } from '@fare/shared';
@@ -22,6 +23,7 @@ export interface MatchResult {
   matchScore: number | null;
   matchState: MatchState;
   explanation: string | null;
+  explanationKind: MatchExplanationKind | null;
 }
 
 export interface MatchBreakdown {
@@ -106,14 +108,19 @@ function explain(
   breakdown: MatchBreakdown,
   profile: TasteProfile,
   dishSpice: number,
-): string | null {
+): { explanation: string | null; explanationKind: MatchExplanationKind | null } {
   const parts: string[] = [];
   if (breakdown.avoidedHits.length)
     parts.push(`Contains ${formatList(breakdown.avoidedHits)}, which you avoid`);
   if (breakdown.favoriteHits.length)
     parts.push(`Has ${formatList(breakdown.favoriteHits)}, which you like`);
+  const ingredientReason = parts.length > 0;
   if (dishSpice > profile.spiceTolerance) parts.push('Spicier than you usually like');
-  return parts.length ? `${parts.join('. ')}.` : null;
+  if (!parts.length) return { explanation: null, explanationKind: null };
+  return {
+    explanation: `${parts.join('. ')}.`,
+    explanationKind: ingredientReason ? 'ingredients' : 'spice',
+  };
 }
 
 /**
@@ -126,7 +133,7 @@ export function computeMatch(
   ownLiked: boolean | null = null,
 ): MatchResult {
   const matchState = matchStateFor(profile !== null, dish.feedbackCount);
-  if (!profile) return { matchScore: null, matchState, explanation: null };
+  if (!profile) return { matchScore: null, matchState, explanation: null, explanationKind: null };
 
   const conflicts = dietaryConflicts(profile.dietaryRestrictions, dish.dietaryTags);
   if (conflicts.length) {
@@ -135,6 +142,7 @@ export function computeMatch(
       matchScore: matchState === 'unrated' ? null : 0,
       matchState,
       explanation: `Not marked ${formatList(labels)} — check with the restaurant.`,
+      explanationKind: 'dietary',
     };
   }
 
@@ -146,13 +154,13 @@ export function computeMatch(
     favoriteHits: ing.favoriteHits,
     avoidedHits: ing.avoidedHits,
   };
-  const explanation = explain(breakdown, profile, dish.spice);
-  if (matchState === 'unrated') return { matchScore: null, matchState, explanation };
+  const why = explain(breakdown, profile, dish.spice);
+  if (matchState === 'unrated') return { matchScore: null, matchState, ...why };
 
   const w = MATCH_CONFIG.weights;
   const raw =
     w.spice * breakdown.spice +
     w.ingredients * breakdown.ingredients +
     w.likedRate * breakdown.likedRate;
-  return { matchScore: Math.round(clamp01(raw) * 100), matchState, explanation };
+  return { matchScore: Math.round(clamp01(raw) * 100), matchState, ...why };
 }

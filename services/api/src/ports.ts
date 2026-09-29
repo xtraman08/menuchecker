@@ -4,6 +4,7 @@ import type {
   DietaryRestriction,
   DishSource,
   Confidence,
+  MatchExplanationKind,
   MatchState,
   MenuSource,
   Restaurant,
@@ -63,6 +64,8 @@ export interface CachedMatch {
   matchScore: number | null;
   matchState: MatchState;
   explanation: string | null;
+  /** Optional until the db adapter stores it; treated as null when absent. */
+  explanationKind?: MatchExplanationKind | null;
 }
 
 /** Repositories scoped to one user's transaction (RLS applies). */

@@ -3,6 +3,7 @@ import {
   confidenceSchema,
   dietaryRestrictionSchema,
   dishSourceSchema,
+  matchExplanationKindSchema,
   matchStateSchema,
   menuSourceSchema,
   parseConfidenceSchema,
@@ -172,6 +173,10 @@ export const dishCardSchema = z.object({
   matchState: matchStateSchema,
   /** Plain-language reason for the match (e.g. dietary conflict); null when nothing to say. */
   matchExplanation: z.string().nullable(),
+  /** Structured reason behind matchExplanation; null when there is no explanation. */
+  matchExplanationKind: matchExplanationKindSchema.nullable(),
+  /** Diets the dish is marked as suitable for (AI-generated: verify with the restaurant). */
+  dietaryTags: z.array(dietaryRestrictionSchema),
   feedbackUp: z.number().int().nonnegative(),
   feedbackDown: z.number().int().nonnegative(),
 });

@@ -353,6 +353,8 @@ describe('restaurants', () => {
       expect(d.matchState).toBe('unrated');
       expect(d.matchScore).toBeNull();
       expect(d.source).toBe('ai_generated');
+      expect(d.dietaryTags).toEqual(['gluten_free']);
+      expect(d.matchExplanationKind).toBeNull();
     }
     expect(body.dishes.map((d: { nativeName: string }) => d.nativeName)).toEqual([
       'Kitfo',
@@ -628,6 +630,8 @@ describe('feedback, taste profile and matching', () => {
     expect(prelim.matchState).toBe('preliminary');
     expect(prelim.matchScore).toBeGreaterThan(50);
     expect(prelim.matchExplanation).toContain('beef');
+    expect(prelim.matchExplanationKind).toBe('ingredients');
+    expect(prelim.dietaryTags).toEqual(['gluten_free']);
 
     // A dietary restriction the dish doesn't carry => 0 with an explanation.
     await app.inject({
@@ -639,6 +643,7 @@ describe('feedback, taste profile and matching', () => {
     expect(await kitfo()).toMatchObject({
       matchScore: 0,
       matchExplanation: expect.stringContaining('vegetarian'),
+      matchExplanationKind: 'dietary',
     });
 
     // Own feedback returns a recomputed card.

@@ -31,6 +31,7 @@ const DECODED = {
   note: 'Vegan',
   ingredients: ['red lentils', 'berbere'],
   dietaryTags: ['vegan' as const, 'vegetarian' as const],
+  confidence: 'low' as const,
 };
 
 describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)', () => {
@@ -196,6 +197,7 @@ describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)',
       expect(decoded).toMatchObject({
         anchor: DECODED.anchor,
         dietaryTags: ['vegan', 'vegetarian'],
+        confidence: 'low',
         source: 'ai_generated',
       });
       expect(decoded?.decodedAt).toBeInstanceOf(Date);

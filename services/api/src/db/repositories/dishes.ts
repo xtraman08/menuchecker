@@ -68,7 +68,7 @@ export async function applyDecode(
   const { rows } = await tx.query<DishRow>(
     `update dishes d
         set anchor = $2, description = $3, spice = $4, texture = $5, adventurousness = $6,
-            note = $7, ingredients = $8, dietary_tags = $9, decoded_at = now()
+            note = $7, ingredients = $8, dietary_tags = $9, confidence = $10, decoded_at = now()
       where d.id = $1
       returning ${COLUMNS}`,
     [
@@ -81,6 +81,7 @@ export async function applyDecode(
       decoded.note,
       decoded.ingredients,
       decoded.dietaryTags,
+      decoded.confidence,
     ],
   );
   return rows[0] ?? null;

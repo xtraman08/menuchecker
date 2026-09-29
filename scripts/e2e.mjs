@@ -9,7 +9,8 @@
 // Uses its own compose project (fare-e2e) so the database always starts empty;
 // stop the dev stack first if it holds the same ports.
 import { ENV_FILE, ROOT, compose, loadEnv, log, run, waitForUrl } from './lib.mjs';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 const argv = process.argv.slice(2);
@@ -27,10 +28,30 @@ if (!existsSync(ENV_FILE)) {
 loadEnv();
 
 const project = ['-p', 'fare-e2e'];
+// Every spec signs up fresh anonymous users from one IP, which trips the per-IP
+// sign-up limit meant for real clients. Raise only that one for the e2e stack;
+// scan/decode limits stay as configured so the rate-limit specs remain meaningful.
+process.env.RATE_LIMIT_AUTH_PER_HOUR = process.env.E2E_RATE_LIMIT_AUTH_PER_HOUR || '1000';
 const apiUrl = `http://localhost:${process.env.API_PORT || 4000}`;
 const webUrl = `http://localhost:${process.env.WEB_PORT || 8080}`;
 
 let exitCode = 1;
+
+/** Writes full compose logs to e2e/test-results/compose.log (uploaded by CI). */
+function saveLogs() {
+  try {
+    const out = execFileSync('docker', ['compose', ...project, 'logs', '--no-color'], {
+      cwd: ROOT,
+      maxBuffer: 256 * 1024 * 1024,
+    });
+    const dir = path.join(ROOT, 'e2e', 'test-results');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, 'compose.log'), out);
+    log('compose logs saved to e2e/test-results/compose.log');
+  } catch (err) {
+    log(`could not save compose logs: ${err.message}`);
+  }
+}
 try {
   if (installBrowsers) {
     await run('npx', ['playwright', 'install', 'chromium'], { cwd: path.join(ROOT, 'e2e') });
@@ -60,11 +81,7 @@ try {
   if (keep) {
     log('--keep: stack left running (docker compose -p fare-e2e down -v to remove)');
   } else {
-    if (exitCode !== 0) {
-      await compose([...project, 'logs', '--no-color', '--tail', '100', 'api'], {
-        allowFailure: true,
-      });
-    }
+    if (exitCode !== 0) saveLogs();
     await compose([...project, 'down', '-v', '--remove-orphans'], { allowFailure: true });
   }
 }

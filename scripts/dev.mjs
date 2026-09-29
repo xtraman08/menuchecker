@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Hot-reload dev loop: Postgres in docker, API (tsx watch) and Expo web on the host.
 //   node scripts/dev.mjs [--no-seed] [--no-web]
-import { ENV_FILE, compose, loadEnv, log, run, start } from './lib.mjs';
+import { ENV_FILE, compose, isWindows, loadEnv, log, run, start } from './lib.mjs';
+import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 
 if (!existsSync(ENV_FILE)) {
@@ -24,12 +25,23 @@ log(
     ' (Ctrl+C to stop; db keeps running)',
 );
 
+// On Windows the children run under cmd.exe (shell: true), so killing the direct
+// child would orphan node/metro; kill the whole process tree instead.
+const killTree = (c) => {
+  if (c.exitCode !== null) return;
+  if (isWindows) spawnSync('taskkill', ['/PID', String(c.pid), '/T', '/F'], { stdio: 'ignore' });
+  else c.kill();
+};
+let stopping = false;
 const stop = () => {
-  for (const c of children) c.kill();
+  if (stopping) return;
+  stopping = true;
+  for (const c of children) killTree(c);
   process.exit(0);
 };
 process.on('SIGINT', stop);
 process.on('SIGTERM', stop);
+process.on('SIGHUP', stop);
 for (const c of children) {
   c.on('exit', (code) => {
     log(`a dev process exited with ${code}; stopping`);

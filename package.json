@@ -22,7 +22,7 @@
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test -w @fare/shared -w @fare/db -w @fare/api -w @fare/mobile --if-present",
-    "test:integration": "node scripts/run-ws.mjs test:integration",
+    "test:db": "node scripts/test-db.mjs",
     "test:e2e": "node scripts/e2e.mjs",
     "db:up": "docker compose up -d --wait db",
     "db:migrate": "node --env-file-if-exists=.env db/scripts/migrate.mjs",

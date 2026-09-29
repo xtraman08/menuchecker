@@ -5,6 +5,11 @@
 //      (never overwrites values you set; replaces an unset/placeholder JWT_SECRET),
 //   3. npm install,
 //   4. installs Playwright Chromium (skip with --skip-browsers).
+//
+// If Docker Hub is unreachable (e.g. EOF from production.cloudfront.docker.com),
+// pull the base images from Google's Docker Hub mirror and re-tag them locally:
+//   node scripts/setup.mjs --pull-from-mirror
+// Repo files keep the standard image names; this only fills the local image cache.
 import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -62,6 +67,16 @@ if (!existsSync(ENV_FILE) || readFileSync(ENV_FILE, 'utf8').trim() === '') {
 
 if (!parseEnv(readFileSync(ENV_FILE, 'utf8')).get('ANTHROPIC_API_KEY')) {
   log('note: ANTHROPIC_API_KEY is empty in .env; scan/decode and their e2e specs will be skipped.');
+}
+
+const BASE_IMAGES = ['postgres:16', 'node:24-slim', 'nginxinc/nginx-unprivileged:1.27-alpine'];
+if (process.argv.includes('--pull-from-mirror')) {
+  for (const image of BASE_IMAGES) {
+    const repo = image.includes('/') ? image : `library/${image}`;
+    const mirrored = `mirror.gcr.io/${repo}`;
+    await run('docker', ['pull', mirrored]);
+    await run('docker', ['tag', mirrored, image]);
+  }
 }
 
 await run('npm', ['install']);

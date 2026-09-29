@@ -14,8 +14,25 @@ concurrency:
 
 jobs:
   checks:
-    name: Lint, typecheck, unit tests
+    name: Lint, typecheck, unit + DB/RLS tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      # Enables the DB/RLS integration suites in services/api (they skip when unset).
+      TEST_DATABASE_ADMIN_URL: postgres://postgres:postgres@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,23 +43,6 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-
-  db-integration:
-    name: DB / RLS integration tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - run: cp .env.example .env && sed -i "s/^JWT_SECRET=.*/JWT_SECRET=ci-$(openssl rand -hex 16)/" .env
-      - run: docker compose up -d --wait db
-      - run: npm run db:migrate
-      - run: npm run test:integration
-      - if: always()
-        run: docker compose down -v
 
   e2e:
     name: E2E (docker compose + Playwright)
@@ -63,11 +63,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: e2e
       - name: Run e2e
-        run: npm run test:e2e
+        run: npm run test:e2e -- --skip-browser-install
         env:
           # Real Claude API; scan/decode specs skip themselves when the secret is absent (e.g. forks).
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - if: failure()
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -75,3 +75,4 @@ jobs:
             e2e/playwright-report
             e2e/test-results
           retention-days: 7
+          if-no-files-found: ignore

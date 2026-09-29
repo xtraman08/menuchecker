@@ -5,6 +5,7 @@
 //   node scripts/e2e.mjs [--keep] [--no-build] [-- <playwright args>]
 //     --keep      leave the stack running afterwards (for debugging)
 //     --no-build  reuse existing images
+//     --skip-browser-install  don't run `playwright install chromium` first
 // Uses its own compose project (fare-e2e) so the database always starts empty;
 // stop the dev stack first if it holds the same ports.
 import { ENV_FILE, ROOT, compose, loadEnv, log, run, waitForUrl } from './lib.mjs';
@@ -17,6 +18,7 @@ const own = sep === -1 ? argv : argv.slice(0, sep);
 const playwrightArgs = sep === -1 ? [] : argv.slice(sep + 1);
 const keep = own.includes('--keep');
 const build = !own.includes('--no-build');
+const installBrowsers = !own.includes('--skip-browser-install');
 
 if (!existsSync(ENV_FILE)) {
   console.error('.env not found. Run `npm run setup` first.');
@@ -30,6 +32,9 @@ const webUrl = `http://localhost:${process.env.WEB_PORT || 8080}`;
 
 let exitCode = 1;
 try {
+  if (installBrowsers) {
+    await run('npx', ['playwright', 'install', 'chromium'], { cwd: path.join(ROOT, 'e2e') });
+  }
   if (build) await compose([...project, 'build']);
   await compose([...project, 'up', '-d', '--wait', 'db']);
   await compose([...project, 'run', '--rm', 'migrate']);

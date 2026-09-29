@@ -79,7 +79,7 @@ describe('computeMatch — dietary hard filter', () => {
     expect(r).toEqual({
       matchScore: 0,
       matchState: 'preliminary',
-      explanation: 'Not marked vegetarian — check with the restaurant.',
+      explanation: 'Not marked vegetarian.',
       explanationKind: 'dietary',
     });
   });
@@ -90,9 +90,7 @@ describe('computeMatch — dietary hard filter', () => {
     );
     expect(r.matchScore).toBe(0);
     expect(r.matchState).toBe('confident');
-    expect(r.explanation).toBe(
-      'Not marked vegan, gluten-free and nut-free — check with the restaurant.',
-    );
+    expect(r.explanation).toBe('Not marked vegan, gluten-free and nut-free.');
   });
   it('overrides an otherwise perfect score', () => {
     const r = computeMatch(

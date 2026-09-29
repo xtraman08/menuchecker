@@ -138,10 +138,11 @@ export function computeMatch(
   const conflicts = dietaryConflicts(profile.dietaryRestrictions, dish.dietaryTags);
   if (conflicts.length) {
     const labels = conflicts.map((c) => DIETARY_LABELS[c]);
+    // No "verify with the restaurant" suffix: the card adds that caveat for kind 'dietary'.
     return {
       matchScore: matchState === 'unrated' ? null : 0,
       matchState,
-      explanation: `Not marked ${formatList(labels)} — check with the restaurant.`,
+      explanation: `Not marked ${formatList(labels)}.`,
       explanationKind: 'dietary',
     };
   }

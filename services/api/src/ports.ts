@@ -64,8 +64,8 @@ export interface CachedMatch {
   matchScore: number | null;
   matchState: MatchState;
   explanation: string | null;
-  /** Optional until the db adapter stores it; treated as null when absent. */
-  explanationKind?: MatchExplanationKind | null;
+  /** Null exactly when explanation is null (dish_matches CHECK). */
+  explanationKind: MatchExplanationKind | null;
 }
 
 /** Repositories scoped to one user's transaction (RLS applies). */

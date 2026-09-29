@@ -38,7 +38,7 @@ export function toDishCard(d: DecodedDishRecord, m: CachedMatch): DishCard {
     matchScore: m.matchState === 'unrated' ? null : m.matchScore,
     matchState: m.matchState,
     matchExplanation: m.explanation,
-    matchExplanationKind: m.explanation === null ? null : (m.explanationKind ?? null),
+    matchExplanationKind: m.explanationKind,
     dietaryTags: d.dietaryTags,
     feedbackUp: d.feedbackUp,
     feedbackDown: d.feedbackDown,

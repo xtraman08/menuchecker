@@ -1,4 +1,6 @@
 // Text pass: reviewed dishes -> first-pass dish card fields (saved as source 'ai_generated').
+import { getLogger } from './client.js';
+import { guardDietaryTags } from './dietaryGuard.js';
 import { LlmInputError } from './errors.js';
 import { DECODE_SYSTEM_PROMPT, decodeUserText } from './prompts.js';
 import { DECODE_JSON_SCHEMA, DecodeOutputSchema, type DecodeOutput } from './schemas.js';
@@ -50,13 +52,20 @@ async function decodeBatch(input: DecodeInput, signal?: AbortSignal): Promise<De
   });
 
   const byIndex = new Map(output.dishes.map((d) => [d.index, d]));
-  return input.dishes.map((_, i) => {
+  return input.dishes.map((dish, i) => {
     const { index: _index, ...card } = byIndex.get(i)!;
+    const guarded = guardDietaryTags(card.dietaryTags, card.ingredients);
+    if (guarded.dropped.length) {
+      getLogger().warn(
+        { llm: 'decode', nativeName: dish.nativeName, droppedTags: guarded.dropped },
+        'dropped dietary tags contradicted by ingredients',
+      );
+    }
     return {
       ...card,
       spice: card.spice as DecodedDish['spice'],
       adventurousness: card.adventurousness as DecodedDish['adventurousness'],
-      dietaryTags: [...new Set(card.dietaryTags)],
+      dietaryTags: guarded.tags,
     };
   });
 }

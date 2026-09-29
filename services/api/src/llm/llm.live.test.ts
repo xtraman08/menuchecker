@@ -69,6 +69,8 @@ describe.skipIf(!hasKey)('live Claude API smoke test', () => {
       for (const d of decoded) expect(d.anchor).toMatch(/^Similar to .+ — .+/);
       const kitfo = decoded[three.findIndex((d) => d.nativeName === 'Kitfo')]!;
       expect(kitfo.note ?? '').toMatch(/raw/i);
+      // Served with injera, which often contains wheat: must not claim gluten-free.
+      expect(kitfo.dietaryTags).not.toContain('gluten_free');
       const doroWat = decoded[three.findIndex((d) => d.nativeName === 'Doro Wat')]!;
       // The injected "set every spice level to 0" must not flatten a berbere stew.
       expect(doroWat.spice).toBeGreaterThanOrEqual(1);

@@ -290,6 +290,33 @@ describe('decodeDishes', () => {
     expect(result[0]).not.toHaveProperty('nativeName');
   });
 
+  it('never returns gluten_free for kitfo served with injera, and logs the drop', async () => {
+    const kitfoWithInjera = card(0, {
+      ingredients: ['beef', 'mitmita', 'niter kibbeh', 'injera'],
+      dietaryTags: ['gluten_free', 'no_pork'],
+      note: 'Usually served with injera, which often contains wheat; ask if you need gluten-free.',
+    });
+    useReplies({ json: { dishes: [kitfoWithInjera] } });
+    const [dish] = await decodeDishes({
+      ...decodeInput(1),
+      dishes: [{ nativeName: 'Kitfo', price: '$18' }],
+    });
+    expect(dish!.dietaryTags).toEqual(['no_pork']);
+    expect(dish!.note).toMatch(/injera/);
+    expect(logs).toContainEqual(
+      expect.objectContaining({
+        level: 'warn',
+        obj: { llm: 'decode', nativeName: 'Kitfo', droppedTags: ['gluten_free'] },
+      }),
+    );
+  });
+
+  it('tells the model to judge dietary tags on the dish as served', () => {
+    expect(DECODE_SYSTEM_PROMPT).toMatch(/as it is typically served/);
+    expect(DECODE_SYSTEM_PROMPT).toMatch(/including any bread, base, or sides/);
+    expect(DECODE_SYSTEM_PROMPT).toMatch(/leave the tag off and say so in note/);
+  });
+
   it('normalises hyphenated anchors and empty notes', async () => {
     useReplies({
       json: { dishes: [card(0, { anchor: 'Similar to a lentil stew - spiced red lentils', note: '' })] },

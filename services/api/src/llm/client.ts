@@ -58,6 +58,27 @@ export function getMessagesApi(env: NodeJS.ProcessEnv = process.env): MessagesAp
   return cached;
 }
 
+/** Structured logger; Fastify's `app.log` (pino) fits this shape. */
+export interface LlmLogger {
+  info(obj: object, msg: string): void;
+  warn(obj: object, msg: string): void;
+}
+
+const consoleLogger: LlmLogger = {
+  info: (obj, msg) => console.info(JSON.stringify({ msg, ...obj })),
+  warn: (obj, msg) => console.warn(JSON.stringify({ msg, ...obj })),
+};
+let logger: LlmLogger = consoleLogger;
+
+export function getLogger(): LlmLogger {
+  return logger;
+}
+
+/** Route LLM call logs into the app logger. Pass null to restore the console default. */
+export function setLlmLogger(next: LlmLogger | null): void {
+  logger = next ?? consoleLogger;
+}
+
 /** Test hook: replace the SDK with a fake. Pass null to restore. */
 export function setMessagesApiForTesting(api: MessagesApi | null): void {
   injected = api;

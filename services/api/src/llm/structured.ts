@@ -4,7 +4,7 @@
 // with a note listing the problems -> on second failure, throw LlmOutputError.
 import Anthropic from '@anthropic-ai/sdk';
 import type { z } from 'zod';
-import { FALLBACK_BETA, getMessagesApi, getSettings } from './client.js';
+import { FALLBACK_BETA, getLogger, getMessagesApi, getSettings } from './client.js';
 import { LlmOutputError, LlmUpstreamError } from './errors.js';
 import { retryNote } from './prompts.js';
 
@@ -61,6 +61,7 @@ export async function callStructured<S extends z.ZodTypeAny>(
     }
 
     const result = validate(message, call);
+    logCall(call.label, attempt, settings.model, message, result);
     if (result.ok) return result.value;
     issues = result.issues;
     if (result.fatal) break;
@@ -69,7 +70,42 @@ export async function callStructured<S extends z.ZodTypeAny>(
   throw new LlmOutputError(`${call.label}: model output failed validation`, issues);
 }
 
-type Validation<T> = { ok: true; value: T } | { ok: false; issues: string[]; fatal?: boolean };
+/**
+ * One log line per API call: which model actually answered (differs from the
+ * requested one after a refusal fallback), outcome and token usage. Never logs
+ * prompt or model text.
+ */
+function logCall(
+  label: string,
+  attempt: number,
+  requestedModel: string,
+  message: Anthropic.Beta.BetaMessage,
+  result: Validation<unknown>,
+): void {
+  const usage = message.usage as Anthropic.Beta.BetaUsage & { iterations?: { type: string }[] | null };
+  const fellBack =
+    message.model !== requestedModel ||
+    message.content.some((b) => (b.type as string) === 'fallback') ||
+    (usage.iterations ?? []).some((i) => i.type === 'fallback_message');
+  const entry = {
+    llm: label,
+    attempt,
+    requestedModel,
+    servedModel: message.model,
+    fellBack,
+    stopReason: message.stop_reason,
+    valid: result.ok,
+    ...(result.ok ? {} : { issues: result.issues.slice(0, 5) }),
+    inputTokens: usage.input_tokens,
+    outputTokens: usage.output_tokens,
+    cacheReadTokens: usage.cache_read_input_tokens ?? 0,
+  };
+  const log = getLogger();
+  if (result.ok && !fellBack) log.info(entry, 'llm call');
+  else log.warn(entry, result.ok ? 'llm call served by fallback model' : 'llm call returned invalid output');
+}
+
+type Validation<T> ={ ok: true; value: T } | { ok: false; issues: string[]; fatal?: boolean };
 
 function validate<S extends z.ZodTypeAny>(
   message: Anthropic.Beta.BetaMessage,

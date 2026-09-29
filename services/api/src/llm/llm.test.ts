@@ -7,6 +7,7 @@ import {
   LlmOutputError,
   LlmUpstreamError,
   parseMenuImage,
+  setLlmLogger,
   setMessagesApiForTesting,
   type MessagesApi,
 } from './index.js';
@@ -14,11 +15,12 @@ import { DECODE_SYSTEM_PROMPT, PARSE_SYSTEM_PROMPT } from './prompts.js';
 
 // ---------- fake SDK ----------
 
-type Reply =
+type Reply = (
   | { json: unknown; stop?: Anthropic.Beta.BetaStopReason }
   | { text: string; stop?: Anthropic.Beta.BetaStopReason }
   | { content: unknown[]; stop?: Anthropic.Beta.BetaStopReason }
-  | { error: unknown };
+  | { error: unknown }
+) & { model?: string };
 
 class FakeMessages implements MessagesApi {
   calls: Anthropic.Beta.MessageCreateParamsNonStreaming[] = [];
@@ -37,7 +39,7 @@ class FakeMessages implements MessagesApi {
       id: 'msg_test',
       type: 'message',
       role: 'assistant',
-      model: params.model,
+      model: reply.model ?? params.model,
       content,
       stop_reason: reply.stop ?? 'end_turn',
       stop_sequence: null,
@@ -67,11 +69,19 @@ function useReplies(...replies: Reply[]) {
   return fake;
 }
 
+const logs: { level: 'info' | 'warn'; obj: Record<string, unknown>; msg: string }[] = [];
+
 beforeEach(() => {
   vi.stubEnv('ANTHROPIC_MODEL', 'claude-sonnet-5-5');
+  logs.length = 0;
+  setLlmLogger({
+    info: (obj, msg) => logs.push({ level: 'info', obj: obj as Record<string, unknown>, msg }),
+    warn: (obj, msg) => logs.push({ level: 'warn', obj: obj as Record<string, unknown>, msg }),
+  });
 });
 afterEach(() => {
   setMessagesApiForTesting(null);
+  setLlmLogger(null);
   vi.unstubAllEnvs();
 });
 
@@ -198,8 +208,9 @@ describe('parseMenuImage', () => {
     expect(fake.calls).toHaveLength(2);
   });
 
-  it('reads only the answer after a server-side fallback', async () => {
+  it('reads only the answer after a server-side fallback, and logs who answered', async () => {
     useReplies({
+      model: 'claude-opus-4-8',
       content: [
         { type: 'text', text: '{"partial":' },
         { type: 'fallback', from: { model: 'claude-sonnet-5-5' }, to: { model: 'claude-opus-4-8' } },
@@ -208,6 +219,30 @@ describe('parseMenuImage', () => {
     });
     const result = await parseMenuImage(PNG, 'image/png');
     expect(result.dishes).toHaveLength(3);
+    expect(logs).toEqual([
+      expect.objectContaining({
+        level: 'warn',
+        obj: expect.objectContaining({
+          llm: 'parse',
+          requestedModel: 'claude-sonnet-5-5',
+          servedModel: 'claude-opus-4-8',
+          fellBack: true,
+          valid: true,
+        }),
+      }),
+    ]);
+  });
+
+  it('logs one line per call without prompt or output text', async () => {
+    const bad = { ...parseOk, dishes: [{ nativeName: 'SECRET-DISH', price: null, confidence: 'x' }] };
+    useReplies({ json: bad }, { json: parseOk });
+    await parseMenuImage(PNG, 'image/png');
+    expect(logs.map((l) => [l.level, l.obj.attempt, l.obj.valid, l.obj.fellBack])).toEqual([
+      ['warn', 1, false, false],
+      ['info', 2, true, false],
+    ]);
+    expect(JSON.stringify(logs)).not.toContain('SECRET-DISH');
+    expect(logs[1]!.obj).toMatchObject({ servedModel: 'claude-sonnet-5-5', inputTokens: 1, outputTokens: 1 });
   });
 
   it('opts into refusal fallbacks only for models that support them', async () => {

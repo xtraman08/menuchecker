@@ -258,6 +258,33 @@ describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)',
       ]);
     });
 
+    it('changing, repeating and partial submissions keep counters and earlier fields right', async () => {
+      const menu = await asA((tx) => dishes.listByRestaurant(tx, restaurant.id));
+      const gomen = menu.find((d) => d.nativeName === 'Gomen')!.id;
+      const counters = async () => {
+        const d = await asA((tx) => dishes.get(tx, gomen));
+        return { up: d!.feedbackUp, down: d!.feedbackDown };
+      };
+
+      await asB((tx) => feedback.upsert(tx, { dishId: gomen, accurate: true, tastesLike: 'Saag' }));
+      expect(await counters()).toEqual({ up: 1, down: 0 });
+
+      // Resubmitting the same value does not double-count.
+      await asB((tx) => feedback.upsert(tx, { dishId: gomen, accurate: true }));
+      expect(await counters()).toEqual({ up: 1, down: 0 });
+
+      // Flipping accurate moves the count from up to down.
+      await asB((tx) => feedback.upsert(tx, { dishId: gomen, accurate: false }));
+      expect(await counters()).toEqual({ up: 0, down: 1 });
+
+      // A later liked-only rating keeps accurate and tastesLike, and leaves counters alone.
+      const row = await asB((tx) => feedback.upsert(tx, { dishId: gomen, liked: true }));
+      expect(row).toMatchObject({ accurate: false, tastesLike: 'Saag', liked: true });
+      expect(await counters()).toEqual({ up: 0, down: 1 });
+      const stats = (await asB((tx) => feedback.stats(tx, [gomen]))).get(gomen);
+      expect(stats).toMatchObject({ entries: 1, accurateUp: 0, accurateDown: 1, likedUp: 1 });
+    });
+
     it('aggregates across all diners through counters and the stats function', async () => {
       expect(await asB((tx) => dishes.get(tx, dish.id))).toMatchObject({
         feedbackUp: 1,

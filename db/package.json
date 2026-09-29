@@ -1,0 +1,14 @@
+{
+  "name": "@fare/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Fare Postgres schema: plain-SQL migrations, runner and seed data",
+  "scripts": {
+    "migrate": "node scripts/migrate.mjs",
+    "seed": "node scripts/seed.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  }
+}

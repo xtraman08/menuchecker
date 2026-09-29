@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
-import { LibraryPage, OnboardingPage } from '../pages/index.ts';
-import { ROUTES } from './testids.ts';
+import { LibraryPage, OnboardingPage, type ProfileInput } from '../pages/index.ts';
+import { ROUTES, T } from './testids.ts';
 
 /**
  * Opens the app as a brand-new anonymous diner (fresh browser context = no token)
@@ -8,21 +8,16 @@ import { ROUTES } from './testids.ts';
  */
 export async function startAsNewDiner(
   page: Page,
-  onboarding: 'skip' | { spice: number; diets?: string[] } = 'skip',
+  onboarding: 'skip' | ProfileInput = 'skip',
 ): Promise<LibraryPage> {
   await page.goto(ROUTES.root);
   const ob = new OnboardingPage(page);
-  if (onboarding === 'skip') {
-    await ob.skip();
-  } else {
-    const saved = page.waitForResponse(
-      (r) => r.url().includes('/me/taste-profile') && r.request().method() === 'PUT',
-    );
-    await ob.complete(onboarding);
-    expect((await saved).ok(), 'onboarding PUT /me/taste-profile').toBe(true);
-  }
+  if (onboarding === 'skip') await ob.skip();
+  else await ob.complete(onboarding);
   const lib = new LibraryPage(page);
   await expect(lib.screen()).toBeVisible();
+  // The e2e stack must talk to the real API, never the app's built-in mock.
+  await expect(page.getByTestId(T.library.mockNotice)).toHaveCount(0);
   return lib;
 }
 

@@ -55,15 +55,17 @@ export async function callStructured<S extends z.ZodTypeAny>(
       (params as unknown as Record<string, unknown>).fallbacks = 'default';
     }
 
+    const started = Date.now();
     let message: Anthropic.Beta.BetaMessage;
     try {
       message = await api.create(params, { signal: call.signal });
     } catch (err) {
+      logUpstreamFailure(call.label, attempt, settings.model, err, Date.now() - started);
       throw toUpstreamError(call.label, err);
     }
 
     const result = validate(message, call);
-    logCall(call.label, attempt, settings.model, message, result);
+    logCall(call.label, attempt, settings.model, message, result, Date.now() - started);
     if (result.ok) return result.value;
     issues = result.issues;
     if (result.fatal) break;
@@ -83,6 +85,7 @@ function logCall(
   requestedModel: string,
   message: Anthropic.Beta.BetaMessage,
   result: Validation<unknown>,
+  durationMs: number,
 ): void {
   const usage = message.usage as Anthropic.Beta.BetaUsage & {
     iterations?: { type: string }[] | null;
@@ -103,6 +106,7 @@ function logCall(
     inputTokens: usage.input_tokens,
     outputTokens: usage.output_tokens,
     cacheReadTokens: usage.cache_read_input_tokens ?? 0,
+    durationMs,
   };
   const log = getLogger();
   if (result.ok && !fellBack) log.info(entry, 'llm call');
@@ -111,6 +115,34 @@ function logCall(
       entry,
       result.ok ? 'llm call served by fallback model' : 'llm call returned invalid output',
     );
+}
+
+/**
+ * The request itself failed (after the SDK's own retries on 408/409/429/5xx and
+ * connection errors). Logs status, error class and request id for support.
+ */
+function logUpstreamFailure(
+  label: string,
+  attempt: number,
+  requestedModel: string,
+  err: unknown,
+  durationMs: number,
+): void {
+  if (err instanceof Anthropic.APIUserAbortError) return;
+  const api = err instanceof Anthropic.APIError ? err : undefined;
+  getLogger().warn(
+    {
+      llm: label,
+      attempt,
+      requestedModel,
+      errorType: err instanceof Error ? err.constructor.name : typeof err,
+      status: api?.status,
+      requestId: api?.requestID ?? undefined,
+      message: err instanceof Error ? err.message.slice(0, 300) : undefined,
+      durationMs,
+    },
+    'llm call failed upstream',
+  );
 }
 
 type Validation<T> = { ok: true; value: T } | { ok: false; issues: string[]; fatal?: boolean };

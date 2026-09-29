@@ -289,11 +289,26 @@ describe('parseMenuImage', () => {
     expect(fake.calls[0]).not.toHaveProperty('betas');
   });
 
-  it('wraps API failures in LlmUpstreamError', async () => {
-    useReplies({ error: new Anthropic.InternalServerError(500, undefined, 'boom', new Headers()) });
+  it('wraps API failures in LlmUpstreamError and logs them', async () => {
+    const headers = new Headers({ 'request-id': 'req_123' });
+    useReplies({ error: new Anthropic.InternalServerError(500, undefined, 'boom', headers) });
     const err = await parseMenuImage(PNG, 'image/png').catch((e: unknown) => e);
     expect(err).toBeInstanceOf(LlmUpstreamError);
     expect((err as LlmUpstreamError).status).toBe(500);
+    expect(logs).toEqual([
+      expect.objectContaining({
+        level: 'warn',
+        msg: 'llm call failed upstream',
+        obj: expect.objectContaining({
+          llm: 'parse',
+          attempt: 1,
+          errorType: 'InternalServerError',
+          status: 500,
+          requestId: 'req_123',
+          durationMs: expect.any(Number),
+        }),
+      }),
+    ]);
   });
 
   it('throws LlmConfigError when no API key is configured', async () => {

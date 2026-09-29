@@ -140,6 +140,5 @@ export interface MatchInput {
   matchScore: number | null;
   matchState: MatchState;
   explanation: string | null;
-  /** Optional until ports.CachedMatch makes it required; stored as null when omitted. */
-  explanationKind?: MatchExplanationKind | null;
+  explanationKind: MatchExplanationKind | null;
 }

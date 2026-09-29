@@ -39,7 +39,7 @@ export async function upsertMany(tx: Tx, matches: MatchInput[]): Promise<MatchRo
       matches.map((m) => m.matchScore),
       matches.map((m) => m.matchState),
       matches.map((m) => m.explanation),
-      matches.map((m) => m.explanationKind ?? null),
+      matches.map((m) => m.explanationKind),
     ],
   );
   return rows;

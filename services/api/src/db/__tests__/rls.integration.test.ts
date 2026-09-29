@@ -329,7 +329,13 @@ describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)',
     it('is private per diner and surfaces on the dish list', async () => {
       await asA((tx) =>
         matches.upsertMany(tx, [
-          { dishId: dish.id, matchScore: 80, matchState: 'preliminary', explanation: null },
+          {
+            dishId: dish.id,
+            matchScore: 80,
+            matchState: 'preliminary',
+            explanation: null,
+            explanationKind: null,
+          },
         ]),
       );
       expect(await asA((tx) => dishes.getWithMatch(tx, dish.id))).toMatchObject({
@@ -397,14 +403,26 @@ describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)',
       await expect(
         asB((tx) =>
           matches.upsertMany(tx, [
-            { dishId: dish.id, matchScore: 50, matchState: 'unrated', explanation: null },
+            {
+              dishId: dish.id,
+              matchScore: 50,
+              matchState: 'unrated',
+              explanation: null,
+              explanationKind: null,
+            },
           ]),
         ),
       ).rejects.toThrow(/check constraint/);
       await expect(
         asB((tx) =>
           matches.upsertMany(tx, [
-            { dishId: dish.id, matchScore: null, matchState: 'confident', explanation: null },
+            {
+              dishId: dish.id,
+              matchScore: null,
+              matchState: 'confident',
+              explanation: null,
+              explanationKind: null,
+            },
           ]),
         ),
       ).rejects.toThrow(/check constraint/);
@@ -413,7 +431,13 @@ describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)',
     it("new feedback on a dish clears every diner's cached match for it", async () => {
       await asB((tx) =>
         matches.upsertMany(tx, [
-          { dishId: dish.id, matchScore: 0, matchState: 'preliminary', explanation: 'x' },
+          {
+            dishId: dish.id,
+            matchScore: 0,
+            matchState: 'preliminary',
+            explanation: 'x',
+            explanationKind: 'spice',
+          },
         ]),
       );
       await asB((tx) => feedback.upsert(tx, { dishId: dish.id, liked: true }));
@@ -423,7 +447,13 @@ describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)',
 
     it("a profile change clears only that diner's cached matches", async () => {
       const m = [
-        { dishId: dish.id, matchScore: 70, matchState: 'preliminary' as const, explanation: null },
+        {
+          dishId: dish.id,
+          matchScore: 70,
+          matchState: 'preliminary' as const,
+          explanation: null,
+          explanationKind: null,
+        },
       ];
       await asA((tx) => matches.upsertMany(tx, m));
       await asB((tx) => matches.upsertMany(tx, m));

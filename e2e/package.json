@@ -1,0 +1,23 @@
+{
+  "name": "@fare/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright end-to-end and API-level tests for Fare (runs against the docker compose stack)",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:api": "playwright test --project=api",
+    "test:ui": "playwright test --project=ui",
+    "fixtures": "node --experimental-strip-types scripts/render-fixtures.ts",
+    "install:browsers": "playwright install chromium",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.0",
+    "typescript": "~6.0.3"
+  }
+}

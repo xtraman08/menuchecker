@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { DishCard } from '@/api/types';
-import { DIETARY_CAVEAT, matchStateLabel, matchWord, mentionsDiet, shouldShowScore } from '@/lib/dish';
+import { DIETARY_CAVEAT, matchStateLabel, matchWord, shouldShowScore } from '@/lib/dish';
 import { color, radius, space, type } from '@/theme';
 
 export function MatchIndicator({ dish, emphasis }: { dish: DishCard; emphasis: 'secondary' | 'prominent' }) {
@@ -66,7 +66,7 @@ function Explanation({ dish }: { dish: DishCard }) {
       <Text style={type.small} testID={`dish-card-match-reason-${dish.id}`}>
         {dish.matchExplanation}
       </Text>
-      {dish.matchExplanationKind === 'dietary' || mentionsDiet(dish.matchExplanation) ? (
+      {dish.matchExplanationKind === 'dietary' ? (
         <Text style={styles.caveat} testID={`dish-card-match-caveat-${dish.id}`}>
           {DIETARY_CAVEAT}
         </Text>

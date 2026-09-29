@@ -151,14 +151,21 @@ describe('DishCard dietary caveat', () => {
   });
 
   it('shows the caveat next to a dietary match explanation, even while unrated', () => {
-    render(<DishCard dish={make({ matchExplanation: 'Not marked vegan' })} />);
+    render(<DishCard dish={make({ matchExplanation: 'Not marked vegan', matchExplanationKind: 'dietary' })} />);
     expect(screen.getByTestId('dish-card-match-reason-kitfo')).toHaveTextContent('Not marked vegan');
     expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
   });
 
   it('shows the caveat with a scored dietary conflict', () => {
     render(
-      <DishCard dish={make({ matchScore: 0, matchState: 'confident', matchExplanation: 'Not suitable: vegetarian' })} />,
+      <DishCard
+        dish={make({
+          matchScore: 0,
+          matchState: 'confident',
+          matchExplanation: 'Not suitable: vegetarian',
+          matchExplanationKind: 'dietary',
+        })}
+      />,
     );
     expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
   });
@@ -169,7 +176,7 @@ describe('DishCard dietary caveat', () => {
     expect(screen.getByTestId('dish-card-note-caveat-kitfo')).toHaveTextContent(caveat);
   });
 
-  it('trusts matchExplanationKind "dietary" even when the text has no diet keyword', () => {
+  it('drives the explanation caveat from matchExplanationKind, not wording', () => {
     render(<DishCard dish={make({ matchExplanation: 'Might not suit you', matchExplanationKind: 'dietary' })} />);
     expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
   });
@@ -177,7 +184,14 @@ describe('DishCard dietary caveat', () => {
   it('omits the caveat for non-dietary notes and explanations', () => {
     render(
       <DishCard
-        dish={make({ note: 'Ask for it cooked', matchScore: 50, matchState: 'preliminary', matchExplanation: 'Hotter than you usually like' })}
+        dish={make({
+          note: 'Ask for it cooked',
+          matchScore: 50,
+          matchState: 'preliminary',
+          // Diet wording without the dietary kind must not trigger the caveat.
+          matchExplanation: 'Contains beef you asked to avoid',
+          matchExplanationKind: 'ingredients',
+        })}
       />,
     );
     expect(screen.queryByTestId('dish-card-note-caveat-kitfo')).toBeNull();

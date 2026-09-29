@@ -62,7 +62,7 @@ export const DIETARY_CAVEAT = 'Dietary info is AI-generated — verify with the 
 const DIETARY_WORDS =
   /\b(vegan|vegetarian|pescatarian|gluten|dairy|lactose|nuts?|peanuts?|shellfish|halal|kosher|pork|beef|allerg\w*|celiac|coeliac|diet\w*)\b/i;
 
-/** Heuristic: does this free text (note / match explanation) make a dietary claim? */
+/** Heuristic for the free-text `note` only; structured fields (dietaryTags, matchExplanationKind) drive the rest. */
 export function mentionsDiet(text: string | null | undefined): boolean {
   return !!text && DIETARY_WORDS.test(text);
 }

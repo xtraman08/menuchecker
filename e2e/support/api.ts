@@ -44,6 +44,9 @@ export interface DishCard {
   matchState: MatchState;
   feedbackUp: number;
   feedbackDown: number;
+  dietaryTags?: string[];
+  matchExplanation?: string | null;
+  matchExplanationKind?: 'dietary' | 'ingredients' | 'spice' | 'feedback' | null;
 }
 
 export interface Restaurant {

@@ -148,6 +148,8 @@ test('a dietary conflict is a hard 0 (vegetarian diner, Kitfo)', async () => {
     const card = dishByName((await diner!.getRestaurant(restaurant.id)).dishes, 'Kitfo');
     expect(['preliminary', 'confident']).toContain(card.matchState);
     expect(card.matchScore).toBe(0);
+    expect(card.matchExplanationKind, 'dietary conflict is explained as such').toBe('dietary');
+    expect(card.matchExplanation ?? '').toMatch(/vegetarian/i);
   });
 });
 

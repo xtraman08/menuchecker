@@ -74,6 +74,7 @@ Layout order: photo, name, price, anchor, description, signals, note, provenance
 - `dish-card-anchor-<id>`, `dish-card-description-<id>`
 - `dish-card-spice-<id>` (text contains No heat / Mild / Medium / Hot), `dish-card-texture-<id>`, `dish-card-adventurousness-<id>` (Familiar / A little new / Adventurous)
 - `dish-card-note-<id>`
+- `dish-card-note-caveat-<id>` – "Dietary info is AI-generated — verify with the restaurant", shown when the note makes a dietary claim (e.g. "Vegan") and the dish isn't restaurant-verified
 - `dish-card-source-<id>` – "AI-written, not yet confirmed by diners" | "Refined by diners" | "Verified by the restaurant"
 - `dish-card-low-confidence-<id>` – when `confidence === 'low'`
 - `dish-card-feedback-counts-<id>` – "N diners found this accurate, M didn't" (when any feedback)
@@ -88,7 +89,7 @@ Layout order: photo, name, price, anchor, description, signals, note, provenance
 ## Scan (`/scan`)
 
 - `scan-screen`
-- `scan-camera` – "Take a photo". On web this opens a file chooser (with `capture`).
+- `scan-camera` – "Take a photo". On web this opens a file chooser (with `capture`); if the browser can't, it falls back to a plain file chooser.
 - `scan-library` – "Choose from library". On web: `const [fc] = await Promise.all([page.waitForEvent('filechooser'), page.getByTestId('scan-library').click()]); await fc.setFiles('fixtures/menu.png');`
 - `scan-progress` – visible while `POST /scans` runs
 - `scan-error` – picker/permission/API error text

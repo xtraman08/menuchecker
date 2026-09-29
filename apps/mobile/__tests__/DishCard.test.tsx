@@ -139,3 +139,35 @@ describe('DishCard actions', () => {
     expect(screen.getByTestId('dish-card-add-kitfo')).toHaveTextContent('Add another (2)');
   });
 });
+
+describe('DishCard dietary caveat', () => {
+  const caveat = 'Dietary info is AI-generated — verify with the restaurant';
+
+  it('shows the caveat next to a dietary note', () => {
+    render(<DishCard dish={make({ note: 'Vegan' })} />);
+    expect(screen.getByTestId('dish-card-note-caveat-kitfo')).toHaveTextContent(caveat);
+  });
+
+  it('shows the caveat next to a dietary match explanation, even while unrated', () => {
+    render(<DishCard dish={make({ matchExplanation: 'Not marked vegan' })} />);
+    expect(screen.getByTestId('dish-card-match-reason-kitfo')).toHaveTextContent('Not marked vegan');
+    expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
+  });
+
+  it('shows the caveat with a scored dietary conflict', () => {
+    render(
+      <DishCard dish={make({ matchScore: 0, matchState: 'confident', matchExplanation: 'Not suitable: vegetarian' })} />,
+    );
+    expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
+  });
+
+  it('omits the caveat for non-dietary notes and explanations', () => {
+    render(
+      <DishCard
+        dish={make({ note: 'Ask for it cooked', matchScore: 50, matchState: 'preliminary', matchExplanation: 'Hotter than you usually like' })}
+      />,
+    );
+    expect(screen.queryByTestId('dish-card-note-caveat-kitfo')).toBeNull();
+    expect(screen.queryByTestId('dish-card-match-caveat-kitfo')).toBeNull();
+  });
+});

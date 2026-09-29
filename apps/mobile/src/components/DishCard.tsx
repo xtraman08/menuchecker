@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import type { DishCard as Dish } from '@/api/types';
-import { adventureWord, sourceLabel, spiceWord } from '@/lib/dish';
+import { adventureWord, DIETARY_CAVEAT, mentionsDiet, sourceLabel, spiceWord } from '@/lib/dish';
 import { color, radius, space, type } from '@/theme';
 import { MatchIndicator } from './MatchIndicator';
 import { Button } from './ui';
@@ -96,9 +96,16 @@ export function DishCard({
         </View>
 
         {dish.note ? (
-          <Text style={styles.note} testID={`dish-card-note-${id}`}>
-            {dish.note}
-          </Text>
+          <View style={styles.note}>
+            <Text style={styles.noteText} testID={`dish-card-note-${id}`}>
+              {dish.note}
+            </Text>
+            {dish.source !== 'restaurant_verified' && mentionsDiet(dish.note) ? (
+              <Text style={styles.caveat} testID={`dish-card-note-caveat-${id}`}>
+                {DIETARY_CAVEAT}
+              </Text>
+            ) : null}
+          </View>
         ) : null}
 
         <Provenance dish={dish} />
@@ -225,14 +232,9 @@ const styles = StyleSheet.create({
   pips: { flexDirection: 'row', gap: 3 },
   pip: { width: 9, height: 9, borderRadius: 5, borderWidth: 1.5, borderColor: color.chili },
   pipOn: { backgroundColor: color.chili },
-  note: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: color.ink,
-    backgroundColor: color.paper,
-    borderRadius: radius.sm,
-    padding: space.sm,
-  },
+  note: { backgroundColor: color.paper, borderRadius: radius.sm, padding: space.sm, gap: space.xs },
+  noteText: { fontSize: 14, lineHeight: 20, color: color.ink },
+  caveat: { fontSize: 12, lineHeight: 16, color: color.ochre, fontWeight: '600' },
   provenance: { gap: space.xs, alignItems: 'flex-start' },
   sourceTag: { fontSize: 12, fontWeight: '600', paddingHorizontal: space.sm, paddingVertical: 3, borderRadius: radius.sm, overflow: 'hidden' },
   sourceAi: { backgroundColor: color.ochreSoft, color: color.ochre },

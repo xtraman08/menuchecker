@@ -56,3 +56,13 @@ export function shouldShowScore(d: DishCard): boolean {
 function clamp(n: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, Number.isFinite(n) ? n : lo));
 }
+
+export const DIETARY_CAVEAT = 'Dietary info is AI-generated — verify with the restaurant';
+
+const DIETARY_WORDS =
+  /\b(vegan|vegetarian|pescatarian|gluten|dairy|lactose|nuts?|peanuts?|shellfish|halal|kosher|pork|beef|allerg\w*|celiac|coeliac|diet\w*)\b/i;
+
+/** Heuristic: does this free text (note / match explanation) make a dietary claim? */
+export function mentionsDiet(text: string | null | undefined): boolean {
+  return !!text && DIETARY_WORDS.test(text);
+}

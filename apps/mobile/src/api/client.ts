@@ -141,8 +141,11 @@ export const isMockApi = useMock;
 
 export function errorMessage(e: unknown): string {
   if (e instanceof ApiError) {
-    if (e.status === 429) return 'You have scanned a lot of menus in the last hour. Try again later.';
+    if (e.status === 429) return "You've hit the hourly limit for scans and saves. Try again later.";
     if (e.status === 413) return 'That photo is too large. Pick a smaller image or crop it to the menu.';
+    if (e.status === 415) return 'That file type isn’t supported. Use a JPEG, PNG or HEIC photo.';
+    if (e.status === 502)
+      return "Fare couldn't read or explain the menu just now. Nothing was lost. Try again in a moment.";
     return e.message;
   }
   if (e instanceof TypeError) return 'Could not reach the Fare server. Check your connection and try again.';

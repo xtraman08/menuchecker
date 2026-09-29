@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { DishCard } from '@/api/types';
-import { matchStateLabel, matchWord, shouldShowScore } from '@/lib/dish';
+import { DIETARY_CAVEAT, matchStateLabel, matchWord, mentionsDiet, shouldShowScore } from '@/lib/dish';
 import { color, radius, space, type } from '@/theme';
 
 export function MatchIndicator({ dish, emphasis }: { dish: DishCard; emphasis: 'secondary' | 'prominent' }) {
@@ -16,11 +16,7 @@ export function MatchIndicator({ dish, emphasis }: { dish: DishCard; emphasis: '
         <Text style={type.small}>
           No match score yet. It appears once you have a taste profile and a few diners have rated this dish.
         </Text>
-        {dish.matchExplanation ? (
-          <Text style={type.small} testID={`dish-card-match-reason-${id}`}>
-            {dish.matchExplanation}
-          </Text>
-        ) : null}
+          <Explanation dish={dish} />
       </View>
     );
   }
@@ -58,9 +54,21 @@ export function MatchIndicator({ dish, emphasis }: { dish: DishCard; emphasis: '
           ]}
         />
       </View>
-      {dish.matchExplanation ? (
-        <Text style={type.small} testID={`dish-card-match-reason-${id}`}>
-          {dish.matchExplanation}
+      <Explanation dish={dish} />
+    </View>
+  );
+}
+
+function Explanation({ dish }: { dish: DishCard }) {
+  if (!dish.matchExplanation) return null;
+  return (
+    <View style={{ gap: 2 }}>
+      <Text style={type.small} testID={`dish-card-match-reason-${dish.id}`}>
+        {dish.matchExplanation}
+      </Text>
+      {mentionsDiet(dish.matchExplanation) ? (
+        <Text style={styles.caveat} testID={`dish-card-match-caveat-${dish.id}`}>
+          {DIETARY_CAVEAT}
         </Text>
       ) : null}
     </View>
@@ -68,6 +76,7 @@ export function MatchIndicator({ dish, emphasis }: { dish: DishCard; emphasis: '
 }
 
 const styles = StyleSheet.create({
+  caveat: { fontSize: 12, lineHeight: 16, color: color.ochre, fontWeight: '600' },
   box: { borderRadius: radius.md, padding: space.md, gap: space.sm },
   unrated: { borderWidth: 1, borderStyle: 'dashed', borderColor: color.muted, backgroundColor: color.paper },
   scored: { backgroundColor: color.tealSoft },

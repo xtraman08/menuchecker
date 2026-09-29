@@ -41,10 +41,30 @@ export default function Scan() {
       }
     }
     const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.8, exif: false };
-    const res =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync(opts)
-        : await ImagePicker.launchImageLibraryAsync(opts);
+    let res: ImagePicker.ImagePickerResult;
+    try {
+      res =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync(opts)
+          : await ImagePicker.launchImageLibraryAsync(opts);
+    } catch {
+      if (source === 'camera' && Platform.OS === 'web') {
+        // Browsers without camera capture: fall back to a plain file upload.
+        try {
+          res = await ImagePicker.launchImageLibraryAsync(opts);
+        } catch {
+          setPickError("Couldn't open a photo picker. Try a different browser, or enter the dishes by hand.");
+          return;
+        }
+      } else {
+        setPickError(
+          source === 'camera'
+            ? "Couldn't open the camera. Choose a photo from your library instead."
+            : "Couldn't open your photo library. Check Fare's photo permission in Settings.",
+        );
+        return;
+      }
+    }
     const asset = res.canceled ? undefined : res.assets[0];
     if (!asset) return;
     if (asset.fileSize && asset.fileSize > MAX_BYTES) {

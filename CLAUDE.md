@@ -4,7 +4,7 @@
 
 A mobile app that tells a diner **what a dish actually is** the moment they look at a menu in a cuisine they don't know (Ethiopian, Turkish, Indian, Mexican, Chinese, etc.).
 
-**The problem is a knowledge deficit, not choice overload.** People can't express preferences until they understand what they're looking at. So the app is **both** an *instant comprehension layer* **and** a *recommendation / preference-matching engine* — comprehension comes first, sequentially, then preference matching builds on top of it once a dish is understood.
+**The problem is a knowledge deficit, not choice overload.** People can't express preferences until they understand what they're looking at. So the app is **both** an _instant comprehension layer_ **and** a _recommendation / preference-matching engine_ — comprehension comes first, sequentially, then preference matching builds on top of it once a dish is understood.
 
 **MVP promise:** point the camera at a menu (or open a saved restaurant) and every dish is instantly decoded — what it looks like, what it's like, how spicy, how adventurous — **and** ranked by how well it's likely to match the diner, once there's enough signal to rank it.
 
@@ -23,21 +23,21 @@ A mobile app that tells a diner **what a dish actually is** the moment they look
 
 Fields per dish:
 
-| Field | Purpose |
-|---|---|
-| `native_name` | Name as printed on the menu |
-| `photo_url` | Representative image (required in the UI; use a placeholder state if missing) |
-| `anchor` | One line: "Similar to X — <what it is>" |
-| `description` | Plain-language ingredients and preparation |
-| `spice` | 0–3 |
-| `texture` | Short plain phrase, e.g. "Saucy, fall-apart" |
-| `adventurousness` | 1–3 (familiar to adventurous) |
-| `note` | Optional honest tip, e.g. "Ask for it cooked if raw isn't your thing", "Vegan" |
-| `price` | As printed on the menu |
-| `source` | `ai_generated` / `diner_refined` / `restaurant_verified` |
-| `confidence` | `high` / `low` |
-| `match_score` | 0–100, or `null` when there isn't enough signal yet (see below) |
-| `match_state` | `unrated` (no signal yet) / `preliminary` (light signal) / `confident` (enough signal to trust) |
+| Field             | Purpose                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| `native_name`     | Name as printed on the menu                                                                     |
+| `photo_url`       | Representative image (required in the UI; use a placeholder state if missing)                   |
+| `anchor`          | One line: "Similar to X — <what it is>"                                                         |
+| `description`     | Plain-language ingredients and preparation                                                      |
+| `spice`           | 0–3                                                                                             |
+| `texture`         | Short plain phrase, e.g. "Saucy, fall-apart"                                                    |
+| `adventurousness` | 1–3 (familiar to adventurous)                                                                   |
+| `note`            | Optional honest tip, e.g. "Ask for it cooked if raw isn't your thing", "Vegan"                  |
+| `price`           | As printed on the menu                                                                          |
+| `source`          | `ai_generated` / `diner_refined` / `restaurant_verified`                                        |
+| `confidence`      | `high` / `low`                                                                                  |
+| `match_score`     | 0–100, or `null` when there isn't enough signal yet (see below)                                 |
+| `match_state`     | `unrated` (no signal yet) / `preliminary` (light signal) / `confident` (enough signal to trust) |
 
 Card layout order: **photo + native name + price → anchor line → description → spice / texture / adventurousness → note → match indicator (or "still learning your taste" state) → add-to-order.**
 
@@ -46,6 +46,7 @@ The match indicator is a secondary visual element to the anchor/photo, not a rep
 ## 4. MVP scope
 
 ### In
+
 1. **Scan a menu** — camera capture or photo library, OCR + AI parsing into structured dishes.
 2. **Review and correct** — editable list of parsed dishes with confidence badges (`Looks good` / `Check this` / `Manual entry`), discard and restore, manual add.
 3. **Decode** — AI generates the first-pass dish card fields for every parsed dish.
@@ -57,6 +58,7 @@ The match indicator is a secondary visual element to the anchor/photo, not a rep
 9. **Preference matching** — a per-dish match score computed from the diner's taste profile plus their own and other diners' feedback on that dish. Shows an honest "unrated" state until there's enough signal (see section 5 for the threshold).
 
 ### Out (later)
+
 - Group swipe-to-decide / group order matching
 - Restaurant-owner claim dashboard
 - Delivery-platform / website menu import
@@ -103,6 +105,7 @@ npm-workspaces monorepo. Layout, ownership and the API contract live in `docs/TE
 ## 8. Reference prototype
 
 `menu-match-app.html` is a single-file interactive prototype and the visual/behavioural reference. It contains:
+
 - Iteration 1: bistro menu with filters, match/value dial, order bar (familiar-cuisine variant; this dial is the starting point for the MVP match indicator)
 - Iteration 2: scan → scanning progress → review/edit flow with confidence badges, discard/restore, "unrated" state
 - Iteration 3: Ethiopian venue with the instant-knowledge card (photo-first, anchor line, spice/texture/adventurousness, notes; no dial was shown here because there was no taste-profile data yet in that mock — in the real MVP this card gains an "unrated" match indicator instead of omitting it)
@@ -115,18 +118,18 @@ Port the **flows and card design**, not the HTML. The canonical MVP dish card me
 
 All commands run from the repo root (Node 24, npm 11, Docker). Secrets live in `.env` (copy of `.env.example`; never committed). `ANTHROPIC_API_KEY` is required for scan/decode and for the E2E scan specs.
 
-| Task | Command |
-|---|---|
-| First-time setup | `npm run setup` (creates/completes `.env` with a generated `JWT_SECRET`, installs deps + Playwright Chromium; `--skip-browsers`; `--pull-from-mirror` if Docker Hub is unreachable) |
-| Full stack in Docker | `npm run docker:build`, `npm run docker:up` (db + migrate + api :4000 + web :8080), `npm run docker:seed`, `npm run docker:down` |
-| Hot-reload dev | `npm run dev` (db in Docker, API via tsx watch, Expo web on host) |
-| Mobile app only | `npm run web -w @fare/mobile`; native: `npx expo start` in `apps/mobile` (not yet verified on a device/simulator) |
-| Database | `npm run db:up`, `npm run db:migrate`, `npm run db:seed`, `npm run db:reset` (drop volume → migrate → seed) |
-| Lint / typecheck / format | `npm run lint`, `npm run typecheck`, `npm run format` / `npm run format:check` |
-| Unit tests | `npm test` (shared, db, api, mobile; excludes E2E) |
-| DB + RLS integration tests | `npm run test:db` (starts Postgres in Docker) |
-| E2E (Playwright) | `npm run test:e2e` (isolated `fare-e2e` compose project, fresh DB each run; flags `--keep`, `--no-build`, `--skip-browser-install`; Playwright args after `-- --`) |
-| Web build | `npm run build:web -w @fare/mobile` (writes `apps/mobile/dist`; add `--clear` when changing `EXPO_PUBLIC_API_URL`) |
+| Task                       | Command                                                                                                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First-time setup           | `npm run setup` (creates/completes `.env` with a generated `JWT_SECRET`, installs deps + Playwright Chromium; `--skip-browsers`; `--pull-from-mirror` if Docker Hub is unreachable) |
+| Full stack in Docker       | `npm run docker:build`, `npm run docker:up` (db + migrate + api :4000 + web :8080), `npm run docker:seed`, `npm run docker:down`                                                    |
+| Hot-reload dev             | `npm run dev` (db in Docker, API via tsx watch, Expo web on host)                                                                                                                   |
+| Mobile app only            | `npm run web -w @fare/mobile`; native: `npx expo start` in `apps/mobile` (not yet verified on a device/simulator)                                                                   |
+| Database                   | `npm run db:up`, `npm run db:migrate`, `npm run db:seed`, `npm run db:reset` (drop volume → migrate → seed)                                                                         |
+| Lint / typecheck / format  | `npm run lint`, `npm run typecheck`, `npm run format` / `npm run format:check`                                                                                                      |
+| Unit tests                 | `npm test` (shared, db, api, mobile; excludes E2E)                                                                                                                                  |
+| DB + RLS integration tests | `npm run test:db` (starts Postgres in Docker)                                                                                                                                       |
+| E2E (Playwright)           | `npm run test:e2e` (isolated `fare-e2e` compose project, fresh DB each run; flags `--keep`, `--no-build`, `--skip-browser-install`; Playwright args after `-- --`)                  |
+| Web build                  | `npm run build:web -w @fare/mobile` (writes `apps/mobile/dist`; add `--clear` when changing `EXPO_PUBLIC_API_URL`)                                                                  |
 
 Native store builds (EAS) are not set up yet. Keep this section accurate as tooling changes — an outdated command here is worse than no command.
 

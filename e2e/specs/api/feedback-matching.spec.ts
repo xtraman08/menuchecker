@@ -22,7 +22,7 @@ async function withUsers<T>(n: number, fn: (users: ApiUser[]) => Promise<T>): Pr
 
 test('seeded dishes satisfy the DishCard contract and start unrated for a new diner', async () => {
   await withUsers(1, async ([u]) => {
-    for (const cuisine of [/ethiop/i, /bistro|french|american|european/i]) {
+    for (const cuisine of ['ethiopian', 'bistro'] as const) {
       const { dishes } = await findSeededRestaurant(u!, cuisine);
       expect(dishes.length).toBeGreaterThan(0);
       for (const d of dishes) {
@@ -37,7 +37,7 @@ test('seeded dishes satisfy the DishCard contract and start unrated for a new di
 
 test('seeded Ethiopian menu keeps native names', async () => {
   await withUsers(1, async ([u]) => {
-    const { dishes } = await findSeededRestaurant(u!, /ethiop/i);
+    const { dishes } = await findSeededRestaurant(u!, 'ethiopian');
     for (const name of ['Kitfo', /^Doro W(a|o)t$/i, 'Shiro']) dishByName(dishes, name);
   });
 });
@@ -53,8 +53,8 @@ test('seeded feedback volume drives match states once the diner has a profile', 
       favoriteIngredients: [],
       cuisinesTried: [],
     });
-    const eth = (await findSeededRestaurant(u!, /ethiop/i)).dishes;
-    const bistro = (await findSeededRestaurant(u!, /french|bistro/i)).dishes;
+    const eth = (await findSeededRestaurant(u!, 'ethiopian')).dishes;
+    const bistro = (await findSeededRestaurant(u!, 'bistro')).dishes;
 
     const doro = dishByName(eth, /^doro w(a|o)t$/i);
     expect(doro.source).toBe('diner_refined');
@@ -73,7 +73,7 @@ test('seeded feedback volume drives match states once the diner has a profile', 
 
 test('feedback increments the accuracy counters by exactly one', async () => {
   await withUsers(2, async ([up, down]) => {
-    const { restaurant, dishes } = await findSeededRestaurant(up!, /ethiop/i);
+    const { restaurant, dishes } = await findSeededRestaurant(up!, 'ethiopian');
     const before = dishByName(dishes, 'Shiro');
 
     const afterUp = (await up!.feedback(before.id, { accurate: true, tastesLike: 'hummus' })).dish;
@@ -92,7 +92,7 @@ test('feedback increments the accuracy counters by exactly one', async () => {
 
 test('feedback rejects invalid bodies and unknown dishes', async () => {
   await withUsers(1, async ([u]) => {
-    const { dishes } = await findSeededRestaurant(u!, /ethiop/i);
+    const { dishes } = await findSeededRestaurant(u!, 'ethiopian');
     const bad = await u!.ctx.post(`/dishes/${dishes[0]!.id}/feedback`, {
       data: { accurate: 'very', liked: 42 },
     });
@@ -106,7 +106,7 @@ test('feedback rejects invalid bodies and unknown dishes', async () => {
 
 test('match state moves from unrated to a real score once profile + 3 feedback exist', async () => {
   await withUsers(4, async ([diner, ...raters]) => {
-    const { restaurant, dishes } = await findSeededRestaurant(diner!, /ethiop/i);
+    const { restaurant, dishes } = await findSeededRestaurant(diner!, 'ethiopian');
     const tibs = dishByName(dishes, /tibs/i);
 
     // Profile alone is not enough if the dish has < 3 feedback entries; feedback alone
@@ -134,7 +134,7 @@ test('match state moves from unrated to a real score once profile + 3 feedback e
 
 test('a dietary conflict is a hard 0 (vegetarian diner, Kitfo)', async () => {
   await withUsers(4, async ([diner, ...raters]) => {
-    const { restaurant, dishes } = await findSeededRestaurant(diner!, /ethiop/i);
+    const { restaurant, dishes } = await findSeededRestaurant(diner!, 'ethiopian');
     const kitfo = dishByName(dishes, 'Kitfo');
     for (const r of raters) await r.feedback(kitfo.id, { liked: true });
 
@@ -153,7 +153,7 @@ test('a dietary conflict is a hard 0 (vegetarian diner, Kitfo)', async () => {
 
 test('menu order is not changed by match score by default', async () => {
   await withUsers(1, async ([u]) => {
-    const { restaurant, dishes: before } = await findSeededRestaurant(u!, /ethiop/i);
+    const { restaurant, dishes: before } = await findSeededRestaurant(u!, 'ethiopian');
     await u!.putTasteProfile({
       dietaryRestrictions: ['vegan'],
       spiceTolerance: 0,

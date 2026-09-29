@@ -6,7 +6,7 @@ import { failOnPageErrors, startAsNewDiner } from '../../support/ui.ts';
 async function seededEthiopian() {
   const api = await ApiUser.create();
   try {
-    return await findSeededRestaurant(api, /ethiop/i);
+    return await findSeededRestaurant(api, 'ethiopian');
   } finally {
     await api.dispose();
   }

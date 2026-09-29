@@ -149,7 +149,7 @@ test.describe('RLS directly in Postgres (runtime role fare_app)', () => {
   });
 
   test("user B's session cannot see user A's dish feedback", async () => {
-    const seeded = await findSeededRestaurant(userA, /ethiop/i);
+    const seeded = await findSeededRestaurant(userA, 'ethiopian');
     const dish = seeded.dishes[0]!;
     await userA.feedback(dish.id, { accurate: true, tastesLike: marker });
     await asUser(userB.userId, async () => {

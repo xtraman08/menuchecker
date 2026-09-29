@@ -173,17 +173,23 @@ export class ApiUser {
   }
 }
 
-/** Finds a seeded restaurant by cuisine (e.g. /ethiop/i) and returns it with its dishes. */
-export async function findSeededRestaurant(user: ApiUser, cuisine: RegExp) {
-  const all = await user.listRestaurants();
-  const summary = all.find((r) => cuisine.test(r.cuisine) || cuisine.test(r.name));
-  if (!summary) {
-    throw new Error(
-      `No seeded restaurant matching ${cuisine} in GET /restaurants ` +
-        `(got: ${all.map((r) => `${r.name}/${r.cuisine}`).join(', ') || 'none'}). Was db:seed run?`,
-    );
+/**
+ * Fixed ids from db/seed (see db/README.md). Looked up by id, never by cuisine:
+ * specs create their own Ethiopian/Turkish restaurants, which must not be mistaken for the seed.
+ */
+export const SEED_RESTAURANTS = {
+  ethiopian: { id: '11111111-1111-4111-8111-111111111111', name: 'Selam Ethiopian Kitchen' },
+  bistro: { id: '22222222-2222-4222-8222-222222222222', name: 'Le Petit Coin' },
+} as const;
+
+/** Returns a seeded restaurant with its dishes (per-user match fields for `user`). */
+export async function findSeededRestaurant(user: ApiUser, which: keyof typeof SEED_RESTAURANTS) {
+  const { id, name } = SEED_RESTAURANTS[which];
+  const res = await user.ctx.get(`/restaurants/${id}`);
+  if (res.status() === 404) {
+    throw new Error(`Seeded restaurant ${name} (${id}) not found. Was db:seed run?`);
   }
-  return user.getRestaurant(summary.id);
+  return ok<{ restaurant: Restaurant; dishes: DishCard[] }>(res, `GET /restaurants/${id}`);
 }
 
 export function dishByName(dishes: DishCard[], name: string | RegExp): DishCard {

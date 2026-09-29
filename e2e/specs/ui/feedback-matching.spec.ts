@@ -9,7 +9,7 @@ import { startAsNewDiner } from '../../support/ui.ts';
 async function addRatings(dishName: string | RegExp, n = 3) {
   const raters = await Promise.all(Array.from({ length: n }, () => ApiUser.create()));
   try {
-    const seeded = await findSeededRestaurant(raters[0]!, /ethiop/i);
+    const seeded = await findSeededRestaurant(raters[0]!, 'ethiopian');
     const dish = dishByName(seeded.dishes, dishName);
     for (const r of raters) await r.feedback(dish.id, { accurate: true, liked: true });
     return { seeded, dish };
@@ -20,7 +20,7 @@ async function addRatings(dishName: string | RegExp, n = 3) {
 
 test('"was this accurate?" feedback updates the counts on the card', async ({ page }) => {
   const api = await ApiUser.create();
-  const seeded = await findSeededRestaurant(api, /ethiop/i);
+  const seeded = await findSeededRestaurant(api, 'ethiopian');
   await api.dispose();
   const doro = dishByName(seeded.dishes, /^doro w(a|o)t$/i);
 
@@ -110,8 +110,8 @@ test('match indicator shows honest confidence labels for the seeded states', asy
   // db/seed: Doro Wat has 10 diners of feedback (confident), Steak frites 3 (preliminary),
   // Injera none (unrated even with a profile).
   const api = await ApiUser.create();
-  const eth = await findSeededRestaurant(api, /ethiop/i);
-  const bistro = await findSeededRestaurant(api, /french|bistro/i);
+  const eth = await findSeededRestaurant(api, 'ethiopian');
+  const bistro = await findSeededRestaurant(api, 'bistro');
   await api.dispose();
   const doro = dishByName(eth.dishes, /^doro w(a|o)t$/i);
   const injera = dishByName(eth.dishes, /^injera$/i);

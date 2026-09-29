@@ -220,6 +220,7 @@ export function testConfig(over: Partial<Config> = {}): Config {
     RATE_LIMIT_SCAN_PER_HOUR: 20,
     RATE_LIMIT_DECODE_PER_HOUR: 30,
     RATE_LIMIT_GLOBAL_PER_MINUTE: 1000,
+    RATE_LIMIT_AUTH_PER_HOUR: 1000,
     MAX_UPLOAD_BYTES: 8_000_000,
     MAX_IMAGE_EDGE: 2000,
     ...over,

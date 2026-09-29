@@ -120,6 +120,22 @@ describe('health, auth and errors', () => {
     expect(res.json()).toEqual({ error: { code: 'INTERNAL', message: 'Something went wrong' } });
   });
 
+  it('limits anonymous sign-ups and overall traffic per IP, as configured', async () => {
+    const { app } = await setup({ RATE_LIMIT_AUTH_PER_HOUR: 2, RATE_LIMIT_GLOBAL_PER_MINUTE: 5 });
+    const signUp = () => app.inject({ method: 'POST', url: '/auth/anonymous' });
+    expect((await signUp()).statusCode).toBe(201);
+    const { headers } = await login(app);
+    const limited = await signUp();
+    expect(limited.statusCode).toBe(429);
+    expect(limited.json().error.code).toBe('RATE_LIMITED');
+    const statuses = [];
+    for (let i = 0; i < 6; i++)
+      statuses.push((await app.inject({ method: 'GET', url: '/restaurants', headers })).statusCode);
+    expect(statuses).toContain(429);
+    // /health is exempt so container healthchecks never trip it.
+    expect((await app.inject({ method: 'GET', url: '/health' })).statusCode).toBe(200);
+  });
+
   it('unknown routes 404 with the error shape', async () => {
     const { app } = await setup();
     const res = await app.inject({ method: 'GET', url: '/nope' });

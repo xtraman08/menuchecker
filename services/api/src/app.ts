@@ -40,7 +40,7 @@ export async function buildApp(config: Config, deps: Deps): Promise<FastifyInsta
     limits: { fileSize: config.MAX_UPLOAD_BYTES, files: 1, fields: 5, parts: 6, fieldSize: 1024 },
   });
 
-  await app.register(authRoutes, { deps });
+  await app.register(authRoutes, { deps, config });
   await app.register(scanRoutes, { deps, config });
   await app.register(restaurantRoutes, { deps, config });
   await app.register(dishRoutes, { deps });

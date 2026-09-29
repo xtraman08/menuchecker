@@ -11,6 +11,8 @@ const envSchema = z.object({
   RATE_LIMIT_SCAN_PER_HOUR: z.coerce.number().int().positive().default(20),
   RATE_LIMIT_DECODE_PER_HOUR: z.coerce.number().int().positive().default(30),
   RATE_LIMIT_GLOBAL_PER_MINUTE: z.coerce.number().int().positive().default(300),
+  /** Anonymous sign-ups per client IP per hour. */
+  RATE_LIMIT_AUTH_PER_HOUR: z.coerce.number().int().positive().default(30),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(8_000_000),
   /** Longest edge of the re-encoded image sent to the model. */
   MAX_IMAGE_EDGE: z.coerce.number().int().positive().default(2000),

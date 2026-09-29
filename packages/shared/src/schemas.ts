@@ -12,7 +12,8 @@ import {
 
 const trimmed = (max: number) => z.string().trim().min(1).max(max);
 const price = z.string().trim().max(32).nullable();
-const uuid = z.uuid();
+// z.guid(): any 8-4-4-4-12 hex id (seed data may use non-v4 ids).
+const uuid = z.guid();
 const isoDate = z.iso.datetime({ offset: true });
 const tagList = z.array(z.string().trim().toLowerCase().min(1).max(60)).max(30);
 

@@ -100,7 +100,13 @@ describe.skipIf(!ADMIN_URL)('createDb (DbPort over real Postgres + seed)', () =>
     expect(await db.withUserTx(user, (tx) => tx.upsertTasteProfile(profile))).toEqual(profile);
     expect(await db.withUserTx(user, (tx) => tx.getTasteProfile())).toEqual(profile);
 
-    const match = { dishId, matchScore: null, matchState: 'unrated' as const, explanation: null };
+    const match = {
+      dishId,
+      matchScore: null,
+      matchState: 'unrated' as const,
+      explanation: null,
+      explanationKind: null,
+    };
     await db.withUserTx(user, (tx) => tx.upsertMatches([match]));
     expect(await db.withUserTx(user, (tx) => tx.getMatches([dishId]))).toEqual(
       new Map([[dishId, match]]),

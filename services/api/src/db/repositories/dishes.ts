@@ -11,7 +11,7 @@ const COLUMNS = `d.id, d.menu_id as "menuId", d.position, d.native_name as "nati
 // The current diner's cached match; RLS already limits dish_matches to their rows.
 const WITH_MATCH = `${COLUMNS}, m.restaurant_id as "restaurantId",
   dm.match_score as "matchScore", coalesce(dm.match_state, 'unrated') as "matchState",
-  dm.explanation as "matchExplanation", (dm.id is not null) as "matchCached"`;
+  dm.explanation as "matchExplanation", dm.explanation_kind as "matchExplanationKind", (dm.id is not null) as "matchCached"`;
 
 const WITH_MATCH_FROM = `dishes d
   join menus m on m.id = d.menu_id

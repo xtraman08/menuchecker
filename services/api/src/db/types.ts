@@ -3,6 +3,7 @@ import type {
   Confidence,
   DietaryRestriction,
   DishSource,
+  MatchExplanationKind,
   MatchState,
   MenuSource,
 } from '@fare/shared';
@@ -70,6 +71,7 @@ export interface DishWithMatchRow extends DishRow {
   matchScore: number | null;
   matchState: MatchState;
   matchExplanation: string | null;
+  matchExplanationKind: MatchExplanationKind | null;
   /** False when no dish_matches row is cached for this diner (needs computing). */
   matchCached: boolean;
 }
@@ -129,6 +131,7 @@ export interface MatchRow {
   matchScore: number | null;
   matchState: MatchState;
   explanation: string | null;
+  explanationKind: MatchExplanationKind | null;
   computedAt: Date;
 }
 
@@ -137,4 +140,6 @@ export interface MatchInput {
   matchScore: number | null;
   matchState: MatchState;
   explanation: string | null;
+  /** Optional until ports.CachedMatch makes it required; stored as null when omitted. */
+  explanationKind?: MatchExplanationKind | null;
 }

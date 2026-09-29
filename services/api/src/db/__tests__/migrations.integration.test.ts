@@ -41,6 +41,36 @@ describe.skipIf(!ADMIN_URL)('migrations (real Postgres)', () => {
     expect(rows.map((r) => r.name)).toEqual(all);
   });
 
+  it('0002 upgrades a 0001 database and clears match rows cached without a kind', async () => {
+    const old = await createEmptyDb();
+    const dir = await mkdtemp(path.join(tmpdir(), 'fare-mig-'));
+    try {
+      await cp(path.join(MIGRATIONS_DIR, '0001_init.sql'), path.join(dir, '0001_init.sql'));
+      await migrate({ connectionString: old.ownerUrl, dir, ...quiet });
+      await seed({ connectionString: old.ownerUrl, ...quiet });
+      await ownerQuery(
+        old.ownerUrl,
+        `insert into dish_matches (dish_id, user_id, match_score, match_state, explanation)
+         values ('11111111-0000-4000-8000-000000000102', '00000000-0000-4000-8000-000000000001',
+                 90, 'confident', 'Loved by diners')`,
+      );
+
+      expect(await migrate({ connectionString: old.ownerUrl, ...quiet })).toContain(
+        '0002_match_explanation_kind.sql',
+      );
+      expect(await ownerQuery(old.ownerUrl, 'select * from dish_matches')).toEqual([]);
+      const cols = await ownerQuery<{ column_name: string }>(
+        old.ownerUrl,
+        `select column_name from information_schema.columns
+          where table_name = 'dish_matches' and column_name = 'explanation_kind'`,
+      );
+      expect(cols).toHaveLength(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+      await old.drop();
+    }
+  });
+
   it('enables row-level security on every application table', async () => {
     const rows = await ownerQuery<{ relname: string; relrowsecurity: boolean }>(
       db.ownerUrl,

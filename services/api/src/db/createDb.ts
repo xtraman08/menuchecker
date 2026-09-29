@@ -114,6 +114,7 @@ function userTx(tx: Tx): UserTx {
           matchScore: m.matchScore,
           matchState: m.matchState,
           explanation: m.explanation,
+          explanationKind: m.explanationKind,
         });
       }
       return out;

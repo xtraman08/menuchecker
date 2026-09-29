@@ -353,6 +353,46 @@ describe.skipIf(!ADMIN_URL)('row-level security (real Postgres, role fare_app)',
       ).rejects.toThrow(/row-level security/);
     });
 
+    it('stores the explanation kind, and only alongside an explanation', async () => {
+      await asA((tx) =>
+        matches.upsertMany(tx, [
+          {
+            dishId: dish.id,
+            matchScore: 0,
+            matchState: 'preliminary',
+            explanation: 'Not marked vegetarian — verify with the restaurant',
+            explanationKind: 'dietary',
+          },
+        ]),
+      );
+      expect(await asA((tx) => matches.listMine(tx, [dish.id]))).toEqual([
+        expect.objectContaining({ explanationKind: 'dietary' }),
+      ]);
+      expect(await asA((tx) => dishes.getWithMatch(tx, dish.id))).toMatchObject({
+        matchExplanationKind: 'dietary',
+      });
+      await expect(
+        asA((tx) =>
+          matches.upsertMany(tx, [
+            {
+              dishId: dish.id,
+              matchScore: 50,
+              matchState: 'preliminary',
+              explanation: null,
+              explanationKind: 'spice',
+            },
+          ]),
+        ),
+      ).rejects.toThrow(/dish_matches_kind_needs_explanation/);
+      await expect(
+        asA((tx) =>
+          tx.query(`update dish_matches set explanation_kind = 'vibes' where dish_id = $1`, [
+            dish.id,
+          ]),
+        ),
+      ).rejects.toThrow(/check constraint/);
+    });
+
     it('never stores a score for unrated, nor a rated state without one', async () => {
       await expect(
         asB((tx) =>

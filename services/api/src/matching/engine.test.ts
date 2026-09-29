@@ -58,7 +58,10 @@ describe('computeMatch — unrated', () => {
     expect(r.matchState).toBe('unrated');
   });
   it('never returns a number while unrated, even with a dietary conflict', () => {
-    const r = computeMatch(profile({ dietaryRestrictions: ['vegan'] }), dish({ dietaryTags: [], feedbackCount: 0 }));
+    const r = computeMatch(
+      profile({ dietaryRestrictions: ['vegan'] }),
+      dish({ dietaryTags: [], feedbackCount: 0 }),
+    );
     expect(r.matchScore).toBeNull();
     expect(r.matchState).toBe('unrated');
     expect(r.explanation).toMatch(/Not marked vegan/);
@@ -67,7 +70,10 @@ describe('computeMatch — unrated', () => {
 
 describe('computeMatch — dietary hard filter', () => {
   it('scores 0 with an explanation when a restriction is not satisfied', () => {
-    const r = computeMatch(profile({ dietaryRestrictions: ['vegetarian'] }), dish({ dietaryTags: ['gluten_free'] }));
+    const r = computeMatch(
+      profile({ dietaryRestrictions: ['vegetarian'] }),
+      dish({ dietaryTags: ['gluten_free'] }),
+    );
     expect(r).toEqual({
       matchScore: 0,
       matchState: 'preliminary',
@@ -81,7 +87,9 @@ describe('computeMatch — dietary hard filter', () => {
     );
     expect(r.matchScore).toBe(0);
     expect(r.matchState).toBe('confident');
-    expect(r.explanation).toBe('Not marked vegan, gluten-free and nut-free — check with the restaurant.');
+    expect(r.explanation).toBe(
+      'Not marked vegan, gluten-free and nut-free — check with the restaurant.',
+    );
   });
   it('overrides an otherwise perfect score', () => {
     const r = computeMatch(
@@ -91,7 +99,9 @@ describe('computeMatch — dietary hard filter', () => {
     expect(r.matchScore).toBe(0);
   });
   it('honours implications (vegan satisfies vegetarian / dairy-free / pork-free)', () => {
-    expect(dietaryConflicts(['vegetarian', 'dairy_free', 'no_pork', 'pescatarian'], ['vegan'])).toEqual([]);
+    expect(
+      dietaryConflicts(['vegetarian', 'dairy_free', 'no_pork', 'pescatarian'], ['vegan']),
+    ).toEqual([]);
     expect(dietaryConflicts(['vegan'], ['vegetarian'])).toEqual(['vegan']);
     expect(dietaryConflicts(['no_pork'], ['halal'])).toEqual([]);
     expect(dietaryConflicts(['shellfish_free'], ['kosher'])).toEqual([]);
@@ -124,7 +134,10 @@ describe('ingredientFit', () => {
     expect(ingredientFit(['rice'], profile()).fit).toBe(0.5);
   });
   it('rewards favourites and penalises avoided, case/partial-insensitively', () => {
-    const r = ingredientFit(['Minced Beef', 'chickpeas'], profile({ favoriteIngredients: ['beef', 'Chickpea'] }));
+    const r = ingredientFit(
+      ['Minced Beef', 'chickpeas'],
+      profile({ favoriteIngredients: ['beef', 'Chickpea'] }),
+    );
     expect(r.favoriteHits).toEqual(['beef', 'chickpea']);
     expect(r.fit).toBe(1);
     const a = ingredientFit(['cilantro', 'lamb'], profile({ avoidedIngredients: ['cilantro'] }));
@@ -132,11 +145,16 @@ describe('ingredientFit', () => {
     expect(a.fit).toBe(0);
   });
   it('balances a favourite against an avoided ingredient', () => {
-    const r = ingredientFit(['lamb', 'mint'], profile({ favoriteIngredients: ['lamb'], avoidedIngredients: ['mint'] }));
+    const r = ingredientFit(
+      ['lamb', 'mint'],
+      profile({ favoriteIngredients: ['lamb'], avoidedIngredients: ['mint'] }),
+    );
     expect(r.fit).toBeCloseTo(0.25);
   });
   it('ignores blank terms', () => {
-    expect(ingredientFit(['rice'], profile({ favoriteIngredients: ['  '] })).favoriteHits).toEqual([]);
+    expect(ingredientFit(['rice'], profile({ favoriteIngredients: ['  '] })).favoriteHits).toEqual(
+      [],
+    );
   });
 });
 
@@ -176,7 +194,11 @@ describe('computeMatch — weighted score', () => {
       for (let tol = 0; tol <= 3; tol++)
         for (const liked of [0, 5, 50])
           for (const own of [null, true, false]) {
-            const r = computeMatch(profile({ spiceTolerance: tol }), dish({ spice, likedCount: liked }), own);
+            const r = computeMatch(
+              profile({ spiceTolerance: tol }),
+              dish({ spice, likedCount: liked }),
+              own,
+            );
             expect(Number.isInteger(r.matchScore)).toBe(true);
             expect(r.matchScore!).toBeGreaterThanOrEqual(0);
             expect(r.matchScore!).toBeLessThanOrEqual(100);

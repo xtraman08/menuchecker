@@ -30,7 +30,11 @@ export async function restaurantRoutes(
       const decoded = await deps.llm.decodeDishes({
         cuisine: body.cuisine,
         restaurantName: body.name,
-        dishes: body.dishes.map((d) => ({ nativeName: d.nativeName, price: d.price, rawText: d.rawText })),
+        dishes: body.dishes.map((d) => ({
+          nativeName: d.nativeName,
+          price: d.price,
+          rawText: d.rawText,
+        })),
       });
       if (decoded.length !== body.dishes.length) {
         throw new AppError(502, 'UPSTREAM_ERROR', 'Could not decode every dish, please retry');
@@ -38,7 +42,8 @@ export async function restaurantRoutes(
 
       const newDishes: NewDish[] = body.dishes.map((d, i) => {
         const out = decodedDishSchema.safeParse(decoded[i]);
-        if (!out.success) throw new AppError(502, 'UPSTREAM_ERROR', 'Could not decode every dish, please retry');
+        if (!out.success)
+          throw new AppError(502, 'UPSTREAM_ERROR', 'Could not decode every dish, please retry');
         const dec = out.data;
         // A dish we weren't sure we read correctly can't be decoded with high confidence.
         const lowParse = d.confidence === 'low' || decoded[i]!.confidence === 'low';

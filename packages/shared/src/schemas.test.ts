@@ -63,7 +63,13 @@ describe('shared schemas', () => {
   });
 
   it('parsed dish requires a known confidence', () => {
-    const p = { tempId: 't1', nativeName: 'Shiro', price: null, rawText: 'Shiro ... 12', confidence: 'low' };
+    const p = {
+      tempId: 't1',
+      nativeName: 'Shiro',
+      price: null,
+      rawText: 'Shiro ... 12',
+      confidence: 'low',
+    };
     expect(parsedDishSchema.parse(p)).toEqual(p);
     expect(parsedDishSchema.safeParse({ ...p, confidence: 'medium' }).success).toBe(false);
   });
@@ -76,7 +82,9 @@ describe('shared schemas', () => {
     });
     expect(r.source).toBe('scan');
     expect(r.dishes[0]?.confidence).toBe('manual');
-    expect(createRestaurantRequestSchema.safeParse({ name: 'x', cuisine: 'y', dishes: [] }).success).toBe(false);
+    expect(
+      createRestaurantRequestSchema.safeParse({ name: 'x', cuisine: 'y', dishes: [] }).success,
+    ).toBe(false);
   });
 
   it('feedback requires at least one field', () => {
@@ -94,7 +102,9 @@ describe('shared schemas', () => {
     };
     expect(tasteProfileSchema.parse(p)).toEqual(p);
     expect(tasteProfileSchema.safeParse({ ...p, spiceTolerance: 5 }).success).toBe(false);
-    expect(tasteProfileSchema.safeParse({ ...p, dietaryRestrictions: ['carnivore'] }).success).toBe(false);
+    expect(tasteProfileSchema.safeParse({ ...p, dietaryRestrictions: ['carnivore'] }).success).toBe(
+      false,
+    );
   });
 
   it('match weights sum to 1', () => {

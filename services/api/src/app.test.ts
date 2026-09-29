@@ -1,7 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import sharp from 'sharp';
 import { afterEach, describe, expect, it } from 'vitest';
-import { dishCardSchema, restaurantDetailSchema, scanResponseSchema, type TasteProfile } from '@fare/shared';
+import {
+  dishCardSchema,
+  restaurantDetailSchema,
+  scanResponseSchema,
+  type TasteProfile,
+} from '@fare/shared';
 import { buildApp } from './app.js';
 import type { Config } from './config.js';
 import { LlmInputError, LlmOutputError, LlmUpstreamError } from './llm/index.js';
@@ -36,7 +41,12 @@ async function jpegWithExif(width = 64, height = 48) {
     .toBuffer();
 }
 
-const image = (data: Buffer, type = 'image/jpeg', field = 'image') => ({ field, filename: 'menu.jpg', type, data });
+const image = (data: Buffer, type = 'image/jpeg', field = 'image') => ({
+  field,
+  filename: 'menu.jpg',
+  type,
+  data,
+});
 
 const createBody = {
   name: 'Queen of Sheba',
@@ -78,10 +88,36 @@ describe('health, auth and errors', () => {
     const forged = other.jwt.sign({ sub: '6f1c1c9e-5b8a-4a51-9e0f-1d9b7a2b3c4d' });
     await other.close();
     for (const authorization of [undefined, 'Bearer nope', `Bearer ${forged}`, forged]) {
-      const res = await app.inject({ method: 'GET', url: '/restaurants', headers: authorization ? { authorization } : {} });
+      const res = await app.inject({
+        method: 'GET',
+        url: '/restaurants',
+        headers: authorization ? { authorization } : {},
+      });
       expect(res.statusCode).toBe(401);
       expect(res.json()).toEqual({ error: { code: 'UNAUTHORIZED', message: expect.any(String) } });
     }
+  });
+
+  it('maps a vanished user (FK) to 401 and RLS refusals to 403, never leaking SQL', async () => {
+    const { app, deps } = await setup();
+    const { headers } = await login(app);
+    const fk = Object.assign(new Error('insert violates foreign key'), {
+      code: '23503',
+      constraint: 'taste_profiles_user_id_fkey',
+    });
+    deps.db.withUserTx = (() => Promise.reject(fk)) as never;
+    let res = await app.inject({ method: 'GET', url: '/me/taste-profile', headers });
+    expect(res.statusCode).toBe(401);
+    deps.db.withUserTx = (() =>
+      Promise.reject(
+        Object.assign(new Error('new row violates row-level security'), { code: '42501' }),
+      )) as never;
+    res = await app.inject({ method: 'GET', url: '/me/taste-profile', headers });
+    expect(res.statusCode).toBe(403);
+    deps.db.withUserTx = (() =>
+      Promise.reject(new Error('relation "secret_table" does not exist'))) as never;
+    res = await app.inject({ method: 'GET', url: '/me/taste-profile', headers });
+    expect(res.json()).toEqual({ error: { code: 'INTERNAL', message: 'Something went wrong' } });
   });
 
   it('unknown routes 404 with the error shape', async () => {
@@ -99,9 +135,15 @@ describe('health, auth and errors', () => {
         url: '/restaurants',
         headers: { origin, 'access-control-request-method': 'GET' },
       });
-    expect((await pre('https://app.example.com')).headers['access-control-allow-origin']).toBe('https://app.example.com');
-    expect((await pre('http://localhost:8081')).headers['access-control-allow-origin']).toBe('http://localhost:8081');
-    expect((await pre('https://evil.example')).headers['access-control-allow-origin']).toBeUndefined();
+    expect((await pre('https://app.example.com')).headers['access-control-allow-origin']).toBe(
+      'https://app.example.com',
+    );
+    expect((await pre('http://localhost:8081')).headers['access-control-allow-origin']).toBe(
+      'http://localhost:8081',
+    );
+    expect(
+      (await pre('https://evil.example')).headers['access-control-allow-origin'],
+    ).toBeUndefined();
   });
 
   it('does not allow localhost origins in production', async () => {
@@ -120,7 +162,12 @@ describe('POST /scans', () => {
     const { app, deps } = await setup();
     const { headers } = await login(app);
     const mp = multipart([image(await jpegWithExif())]);
-    const res = await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...headers, ...mp.headers } });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/scans',
+      payload: mp.payload,
+      headers: { ...headers, ...mp.headers },
+    });
     expect(res.statusCode).toBe(200);
     const body = scanResponseSchema.parse(res.json());
     expect(body.dishes[0]?.nativeName).toBe('Kitfo');
@@ -138,7 +185,12 @@ describe('POST /scans', () => {
     const { app, deps } = await setup({ MAX_IMAGE_EDGE: 100 });
     const { headers } = await login(app);
     const mp = multipart([image(await jpegWithExif(400, 200))]);
-    await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...headers, ...mp.headers } });
+    await app.inject({
+      method: 'POST',
+      url: '/scans',
+      payload: mp.payload,
+      headers: { ...headers, ...mp.headers },
+    });
     const [sent] = deps.llm.parseMenuImage.mock.calls[0] as unknown as [Buffer];
     const meta = await sharp(sent).metadata();
     expect([meta.width, meta.height]).toEqual([100, 50]);
@@ -147,7 +199,12 @@ describe('POST /scans', () => {
   it('requires auth', async () => {
     const { app } = await setup();
     const mp = multipart([image(await jpegWithExif())]);
-    const res = await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: mp.headers });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/scans',
+      payload: mp.payload,
+      headers: mp.headers,
+    });
     expect(res.statusCode).toBe(401);
   });
 
@@ -155,7 +212,12 @@ describe('POST /scans', () => {
     const { app, deps } = await setup({ MAX_UPLOAD_BYTES: 1000 });
     const { headers } = await login(app);
     const mp = multipart([image(Buffer.alloc(5000, 1))]);
-    const res = await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...headers, ...mp.headers } });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/scans',
+      payload: mp.payload,
+      headers: { ...headers, ...mp.headers },
+    });
     expect(res.statusCode).toBe(413);
     expect(res.json().error.code).toBe('PAYLOAD_TOO_LARGE');
     expect(deps.llm.parseMenuImage).not.toHaveBeenCalled();
@@ -164,9 +226,17 @@ describe('POST /scans', () => {
   it('rejects disallowed types and non-image bytes with 415', async () => {
     const { app, deps } = await setup();
     const { headers } = await login(app);
-    for (const part of [image(Buffer.from('hello'), 'text/plain'), image(Buffer.from('not really a jpeg'))]) {
+    for (const part of [
+      image(Buffer.from('hello'), 'text/plain'),
+      image(Buffer.from('not really a jpeg')),
+    ]) {
       const mp = multipart([part]);
-      const res = await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...headers, ...mp.headers } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/scans',
+        payload: mp.payload,
+        headers: { ...headers, ...mp.headers },
+      });
       expect(res.statusCode).toBe(415);
       expect(res.json().error.code).toBe('UNSUPPORTED_MEDIA_TYPE');
     }
@@ -182,7 +252,12 @@ describe('POST /scans', () => {
       multipart([image(jpeg), image(jpeg)]),
     ];
     for (const mp of cases) {
-      const res = await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...headers, ...mp.headers } });
+      const res = await app.inject({
+        method: 'POST',
+        url: '/scans',
+        payload: mp.payload,
+        headers: { ...headers, ...mp.headers },
+      });
       expect([400, 413]).toContain(res.statusCode);
     }
     const json = await app.inject({ method: 'POST', url: '/scans', payload: {}, headers });
@@ -196,7 +271,12 @@ describe('POST /scans', () => {
     const jpeg = await jpegWithExif();
     const scan = (h: Record<string, string>) => {
       const mp = multipart([image(jpeg)]);
-      return app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...h, ...mp.headers } });
+      return app.inject({
+        method: 'POST',
+        url: '/scans',
+        payload: mp.payload,
+        headers: { ...h, ...mp.headers },
+      });
     };
     expect((await scan(a.headers)).statusCode).toBe(200);
     expect((await scan(a.headers)).statusCode).toBe(200);
@@ -210,15 +290,30 @@ describe('POST /scans', () => {
     const { app, deps } = await setup();
     const { headers } = await login(app);
     const jpeg = await jpegWithExif();
-    deps.llm.parseMenuImage.mockRejectedValueOnce(new LlmUpstreamError('anthropic 529 overloaded', 529));
+    deps.llm.parseMenuImage.mockRejectedValueOnce(
+      new LlmUpstreamError('anthropic 529 overloaded', 529),
+    );
     let mp = multipart([image(jpeg)]);
-    let res = await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...headers, ...mp.headers } });
+    let res = await app.inject({
+      method: 'POST',
+      url: '/scans',
+      payload: mp.payload,
+      headers: { ...headers, ...mp.headers },
+    });
     expect(res.statusCode).toBe(502);
-    expect(res.json().error).toEqual({ code: 'UPSTREAM_ERROR', message: expect.not.stringContaining('529') });
+    expect(res.json().error).toEqual({
+      code: 'UPSTREAM_ERROR',
+      message: expect.not.stringContaining('529'),
+    });
 
     deps.llm.parseMenuImage.mockRejectedValueOnce(new LlmInputError('empty image'));
     mp = multipart([image(jpeg)]);
-    res = await app.inject({ method: 'POST', url: '/scans', payload: mp.payload, headers: { ...headers, ...mp.headers } });
+    res = await app.inject({
+      method: 'POST',
+      url: '/scans',
+      payload: mp.payload,
+      headers: { ...headers, ...mp.headers },
+    });
     expect(res.statusCode).toBe(400);
   });
 });
@@ -227,7 +322,12 @@ describe('restaurants', () => {
   it('creates a restaurant, decodes dishes, and returns unrated cards', async () => {
     const { app, deps } = await setup();
     const { headers } = await login(app);
-    const res = await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/restaurants',
+      payload: createBody,
+      headers,
+    });
     expect(res.statusCode).toBe(201);
     const body = res.json();
     expect(body.restaurant.name).toBe('Queen of Sheba');
@@ -238,7 +338,10 @@ describe('restaurants', () => {
       expect(d.matchScore).toBeNull();
       expect(d.source).toBe('ai_generated');
     }
-    expect(body.dishes.map((d: { nativeName: string }) => d.nativeName)).toEqual(['Kitfo', 'Shiro']);
+    expect(body.dishes.map((d: { nativeName: string }) => d.nativeName)).toEqual([
+      'Kitfo',
+      'Shiro',
+    ]);
     // Low parse confidence carries through to the card.
     expect(body.dishes.map((d: { confidence: string }) => d.confidence)).toEqual(['high', 'low']);
     expect(deps.llm.decodeDishes).toHaveBeenCalledWith({
@@ -255,7 +358,12 @@ describe('restaurants', () => {
     const { app, deps } = await setup();
     const { headers } = await login(app);
     deps.llm.decodeDishes.mockRejectedValueOnce(new LlmOutputError('bad output', ['x']));
-    let res = await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers });
+    let res = await app.inject({
+      method: 'POST',
+      url: '/restaurants',
+      payload: createBody,
+      headers,
+    });
     expect(res.statusCode).toBe(502);
     deps.llm.decodeDishes.mockResolvedValueOnce([]);
     res = await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers });
@@ -266,7 +374,12 @@ describe('restaurants', () => {
   it('validates the body', async () => {
     const { app, deps } = await setup();
     const { headers } = await login(app);
-    for (const payload of [{}, { ...createBody, dishes: [] }, { ...createBody, name: '' }, { ...createBody, source: 'fax' }]) {
+    for (const payload of [
+      {},
+      { ...createBody, dishes: [] },
+      { ...createBody, name: '' },
+      { ...createBody, source: 'fax' },
+    ]) {
       const res = await app.inject({ method: 'POST', url: '/restaurants', payload, headers });
       expect(res.statusCode).toBe(400);
       expect(res.json().error.code).toBe('VALIDATION_ERROR');
@@ -277,19 +390,39 @@ describe('restaurants', () => {
   it('rate-limits decode per user', async () => {
     const { app } = await setup({ RATE_LIMIT_DECODE_PER_HOUR: 1 });
     const { headers } = await login(app);
-    expect((await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers })).statusCode).toBe(201);
-    expect((await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers })).statusCode).toBe(429);
+    expect(
+      (await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers }))
+        .statusCode,
+    ).toBe(201);
+    expect(
+      (await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers }))
+        .statusCode,
+    ).toBe(429);
   });
 
   it('shares the library across users and supports search', async () => {
     const { app } = await setup();
     const a = await login(app);
     const b = await login(app);
-    await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers: a.headers });
-    await app.inject({ method: 'POST', url: '/restaurants', payload: { ...createBody, name: 'Le Bistro', cuisine: 'French' }, headers: a.headers });
+    await app.inject({
+      method: 'POST',
+      url: '/restaurants',
+      payload: createBody,
+      headers: a.headers,
+    });
+    await app.inject({
+      method: 'POST',
+      url: '/restaurants',
+      payload: { ...createBody, name: 'Le Bistro', cuisine: 'French' },
+      headers: a.headers,
+    });
     const all = await app.inject({ method: 'GET', url: '/restaurants', headers: b.headers });
     expect(all.json()).toHaveLength(2);
-    const found = await app.inject({ method: 'GET', url: '/restaurants?q=ethiop', headers: b.headers });
+    const found = await app.inject({
+      method: 'GET',
+      url: '/restaurants?q=ethiop',
+      headers: b.headers,
+    });
     expect(found.json().map((r: { name: string }) => r.name)).toEqual(['Queen of Sheba']);
     expect(found.json()[0].dishCount).toBe(2);
   });
@@ -297,11 +430,21 @@ describe('restaurants', () => {
   it('GET /restaurants/:id returns cards; 404 / 400 on unknown or bad ids', async () => {
     const { app } = await setup();
     const { headers } = await login(app);
-    const created = (await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers })).json();
-    const res = await app.inject({ method: 'GET', url: `/restaurants/${created.restaurant.id}`, headers });
+    const created = (
+      await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers })
+    ).json();
+    const res = await app.inject({
+      method: 'GET',
+      url: `/restaurants/${created.restaurant.id}`,
+      headers,
+    });
     expect(res.statusCode).toBe(200);
     expect(restaurantDetailSchema.parse(res.json()).dishes).toHaveLength(2);
-    const missing = await app.inject({ method: 'GET', url: '/restaurants/6f1c1c9e-5b8a-4a51-9e0f-1d9b7a2b3c4d', headers });
+    const missing = await app.inject({
+      method: 'GET',
+      url: '/restaurants/6f1c1c9e-5b8a-4a51-9e0f-1d9b7a2b3c4d',
+      headers,
+    });
     expect(missing.statusCode).toBe(404);
     const bad = await app.inject({ method: 'GET', url: '/restaurants/not-a-uuid', headers });
     expect(bad.statusCode).toBe(400);
@@ -310,9 +453,19 @@ describe('restaurants', () => {
   it('hides dishes whose decode never ran', async () => {
     const { app, deps } = await setup();
     const { headers } = await login(app);
-    const created = (await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers })).json();
-    deps.db.addDish(deps.db.restaurants[0]!.menuIds[0]!, { anchor: null, description: null, spice: null });
-    const res = await app.inject({ method: 'GET', url: `/restaurants/${created.restaurant.id}`, headers });
+    const created = (
+      await app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers })
+    ).json();
+    deps.db.addDish(deps.db.restaurants[0]!.menuIds[0]!, {
+      anchor: null,
+      description: null,
+      spice: null,
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: `/restaurants/${created.restaurant.id}`,
+      headers,
+    });
     expect(res.json().dishes).toHaveLength(2);
   });
 });
@@ -320,15 +473,37 @@ describe('restaurants', () => {
 describe('feedback, taste profile and matching', () => {
   async function seeded() {
     const ctx = await setup();
-    const users = [await login(ctx.app), await login(ctx.app), await login(ctx.app), await login(ctx.app)];
-    const created = (await ctx.app.inject({ method: 'POST', url: '/restaurants', payload: createBody, headers: users[0]!.headers })).json();
-    return { ...ctx, users, restaurantId: created.restaurant.id as string, kitfoId: created.dishes[0].id as string };
+    const users = [
+      await login(ctx.app),
+      await login(ctx.app),
+      await login(ctx.app),
+      await login(ctx.app),
+    ];
+    const created = (
+      await ctx.app.inject({
+        method: 'POST',
+        url: '/restaurants',
+        payload: createBody,
+        headers: users[0]!.headers,
+      })
+    ).json();
+    return {
+      ...ctx,
+      users,
+      restaurantId: created.restaurant.id as string,
+      kitfoId: created.dishes[0].id as string,
+    };
   }
 
   it('records feedback and updates the accuracy counters', async () => {
     const { app, users, kitfoId } = await seeded();
     const post = (i: number, payload: object) =>
-      app.inject({ method: 'POST', url: `/dishes/${kitfoId}/feedback`, payload, headers: users[i]!.headers });
+      app.inject({
+        method: 'POST',
+        url: `/dishes/${kitfoId}/feedback`,
+        payload,
+        headers: users[i]!.headers,
+      });
     let res = await post(1, { accurate: true });
     expect(res.statusCode).toBe(200);
     expect(res.json().dish.feedbackUp).toBe(1);
@@ -342,9 +517,25 @@ describe('feedback, taste profile and matching', () => {
   it('validates feedback and 404s unknown dishes', async () => {
     const { app, users, kitfoId } = await seeded();
     const h = users[0]!.headers;
-    expect((await app.inject({ method: 'POST', url: `/dishes/${kitfoId}/feedback`, payload: {}, headers: h })).statusCode).toBe(400);
     expect(
-      (await app.inject({ method: 'POST', url: `/dishes/${kitfoId}/feedback`, payload: { liked: 'yes' }, headers: h })).statusCode,
+      (
+        await app.inject({
+          method: 'POST',
+          url: `/dishes/${kitfoId}/feedback`,
+          payload: {},
+          headers: h,
+        })
+      ).statusCode,
+    ).toBe(400);
+    expect(
+      (
+        await app.inject({
+          method: 'POST',
+          url: `/dishes/${kitfoId}/feedback`,
+          payload: { liked: 'yes' },
+          headers: h,
+        })
+      ).statusCode,
     ).toBe(400);
     const res = await app.inject({
       method: 'POST',
@@ -358,11 +549,25 @@ describe('feedback, taste profile and matching', () => {
   it('taste profile: 404 before onboarding, PUT/GET round-trip, validation', async () => {
     const { app } = await setup();
     const { headers } = await login(app);
-    expect((await app.inject({ method: 'GET', url: '/me/taste-profile', headers })).statusCode).toBe(404);
-    const put = await app.inject({ method: 'PUT', url: '/me/taste-profile', payload: profile, headers });
+    expect(
+      (await app.inject({ method: 'GET', url: '/me/taste-profile', headers })).statusCode,
+    ).toBe(404);
+    const put = await app.inject({
+      method: 'PUT',
+      url: '/me/taste-profile',
+      payload: profile,
+      headers,
+    });
     expect(put.statusCode).toBe(200);
-    expect((await app.inject({ method: 'GET', url: '/me/taste-profile', headers })).json()).toEqual(profile);
-    const bad = await app.inject({ method: 'PUT', url: '/me/taste-profile', payload: { ...profile, spiceTolerance: 9 }, headers });
+    expect((await app.inject({ method: 'GET', url: '/me/taste-profile', headers })).json()).toEqual(
+      profile,
+    );
+    const bad = await app.inject({
+      method: 'PUT',
+      url: '/me/taste-profile',
+      payload: { ...profile, spiceTolerance: 9 },
+      headers,
+    });
     expect(bad.statusCode).toBe(400);
   });
 
@@ -370,13 +575,18 @@ describe('feedback, taste profile and matching', () => {
     const { app, users, restaurantId, kitfoId } = await seeded();
     const me = users[0]!.headers;
     const kitfo = async () =>
-      (await app.inject({ method: 'GET', url: `/restaurants/${restaurantId}`, headers: me })).json().dishes.find(
-        (d: { id: string }) => d.id === kitfoId,
-      );
+      (await app.inject({ method: 'GET', url: `/restaurants/${restaurantId}`, headers: me }))
+        .json()
+        .dishes.find((d: { id: string }) => d.id === kitfoId);
 
     // Feedback but no profile: still unrated.
     for (const u of users.slice(1)) {
-      await app.inject({ method: 'POST', url: `/dishes/${kitfoId}/feedback`, payload: { liked: true }, headers: u.headers });
+      await app.inject({
+        method: 'POST',
+        url: `/dishes/${kitfoId}/feedback`,
+        payload: { liked: true },
+        headers: u.headers,
+      });
     }
     expect(await kitfo()).toMatchObject({ matchState: 'unrated', matchScore: null });
 
@@ -388,23 +598,42 @@ describe('feedback, taste profile and matching', () => {
     expect(prelim.matchExplanation).toContain('beef');
 
     // A dietary restriction the dish doesn't carry => 0 with an explanation.
-    await app.inject({ method: 'PUT', url: '/me/taste-profile', payload: { ...profile, dietaryRestrictions: ['vegetarian'] }, headers: me });
-    expect(await kitfo()).toMatchObject({ matchScore: 0, matchExplanation: expect.stringContaining('vegetarian') });
+    await app.inject({
+      method: 'PUT',
+      url: '/me/taste-profile',
+      payload: { ...profile, dietaryRestrictions: ['vegetarian'] },
+      headers: me,
+    });
+    expect(await kitfo()).toMatchObject({
+      matchScore: 0,
+      matchExplanation: expect.stringContaining('vegetarian'),
+    });
 
     // Own feedback returns a recomputed card.
-    const res = await app.inject({ method: 'POST', url: `/dishes/${kitfoId}/feedback`, payload: { liked: false }, headers: me });
+    const res = await app.inject({
+      method: 'POST',
+      url: `/dishes/${kitfoId}/feedback`,
+      payload: { liked: false },
+      headers: me,
+    });
     expect(res.json().dish).toMatchObject({ matchState: 'preliminary', matchScore: 0 });
   });
 
   it('reaches confident at 10 feedback entries', async () => {
     const { app, deps, users, restaurantId, kitfoId } = await seeded();
-    for (let i = 0; i < 10; i++) deps.db.feedback.push({ dishId: kitfoId, userId: `u${i}`, liked: true });
+    for (let i = 0; i < 10; i++)
+      deps.db.feedback.push({ dishId: kitfoId, userId: `u${i}`, liked: true });
     const me = users[0]!.headers;
     await app.inject({ method: 'PUT', url: '/me/taste-profile', payload: profile, headers: me });
-    const dishes = (await app.inject({ method: 'GET', url: `/restaurants/${restaurantId}`, headers: me })).json().dishes;
+    const dishes = (
+      await app.inject({ method: 'GET', url: `/restaurants/${restaurantId}`, headers: me })
+    ).json().dishes;
     const kitfo = dishes.find((d: { id: string }) => d.id === kitfoId);
     expect(kitfo.matchState).toBe('confident');
     // Shiro has no feedback => still honestly unrated.
-    expect(dishes.find((d: { id: string }) => d.id !== kitfoId)).toMatchObject({ matchState: 'unrated', matchScore: null });
+    expect(dishes.find((d: { id: string }) => d.id !== kitfoId)).toMatchObject({
+      matchState: 'unrated',
+      matchScore: null,
+    });
   });
 });

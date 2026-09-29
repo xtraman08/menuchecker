@@ -20,7 +20,10 @@ declare module 'fastify' {
  * expensive routes (scan, decode). In-memory store: fine for a single API
  * instance; swap for Redis if we ever run more than one.
  */
-export async function registerRateLimit(app: FastifyInstance, globalPerMinute: number): Promise<void> {
+export async function registerRateLimit(
+  app: FastifyInstance,
+  globalPerMinute: number,
+): Promise<void> {
   app.decorate('userRateKey', (req: FastifyRequest) => {
     const userId = app.userIdFromToken(req);
     return userId ? `user:${userId}` : `ip:${req.ip}`;

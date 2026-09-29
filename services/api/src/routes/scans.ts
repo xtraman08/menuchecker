@@ -19,7 +19,11 @@ export async function scanRoutes(
     },
     async (req): Promise<ScanResponse> => {
       if (!req.isMultipart()) {
-        throw new AppError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send the photo as multipart/form-data field "image"');
+        throw new AppError(
+          415,
+          'UNSUPPORTED_MEDIA_TYPE',
+          'Send the photo as multipart/form-data field "image"',
+        );
       }
 
       let upload: Buffer | undefined;
@@ -41,7 +45,10 @@ export async function scanRoutes(
       const parsed = await deps.llm.parseMenuImage(image.data, image.mime);
       const out = scanResponseSchema.safeParse({ scanId: randomUUID(), ...parsed });
       if (!out.success) {
-        req.log.error({ issues: out.error.issues.slice(0, 5) }, 'parse output failed the shared schema');
+        req.log.error(
+          { issues: out.error.issues.slice(0, 5) },
+          'parse output failed the shared schema',
+        );
         throw new AppError(502, 'UPSTREAM_ERROR', 'Could not read this menu, please retry');
       }
       return out.data;

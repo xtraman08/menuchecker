@@ -45,19 +45,20 @@ export const MATCH_CONFIG = {
  * A dish tag satisfies these diner restrictions too (a `vegan` dish is fine for
  * a vegetarian). Every tag trivially satisfies itself.
  */
-export const DIETARY_IMPLIES: Readonly<Record<DietaryRestriction, readonly DietaryRestriction[]>> = {
-  vegan: ['vegetarian', 'pescatarian', 'dairy_free', 'shellfish_free', 'no_pork', 'no_beef'],
-  vegetarian: ['pescatarian', 'shellfish_free', 'no_pork', 'no_beef'],
-  pescatarian: ['no_pork', 'no_beef'],
-  gluten_free: [],
-  dairy_free: [],
-  nut_free: [],
-  shellfish_free: [],
-  halal: ['no_pork'],
-  kosher: ['no_pork', 'shellfish_free'],
-  no_pork: [],
-  no_beef: [],
-};
+export const DIETARY_IMPLIES: Readonly<Record<DietaryRestriction, readonly DietaryRestriction[]>> =
+  {
+    vegan: ['vegetarian', 'pescatarian', 'dairy_free', 'shellfish_free', 'no_pork', 'no_beef'],
+    vegetarian: ['pescatarian', 'shellfish_free', 'no_pork', 'no_beef'],
+    pescatarian: ['no_pork', 'no_beef'],
+    gluten_free: [],
+    dairy_free: [],
+    nut_free: [],
+    shellfish_free: [],
+    halal: ['no_pork'],
+    kosher: ['no_pork', 'shellfish_free'],
+    no_pork: [],
+    no_beef: [],
+  };
 
 /** Human labels for explanations and UI chips. */
 export const DIETARY_LABELS: Readonly<Record<DietaryRestriction, string>> = {

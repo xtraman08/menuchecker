@@ -61,6 +61,7 @@ export class FakeDb implements DbPort {
   }
 
   withUserTx<T>(userId: string, fn: (tx: UserTx) => Promise<T>): Promise<T> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- the tx methods below have their own `this`
     const db = this;
     const mine = (dishId: string) => `${userId}:${dishId}`;
     const invalidateDish = (dishId: string) => {
@@ -68,7 +69,13 @@ export class FakeDb implements DbPort {
     };
     const tx: UserTx = {
       async createRestaurant(input) {
-        const r = { id: randomUUID(), ...input, createdBy: userId, createdAt: new Date().toISOString(), menuIds: [] };
+        const r = {
+          id: randomUUID(),
+          ...input,
+          createdBy: userId,
+          createdAt: new Date().toISOString(),
+          menuIds: [],
+        };
         db.restaurants.push(r);
         const { menuIds: _m, ...out } = r;
         return out;
@@ -98,7 +105,13 @@ export class FakeDb implements DbPort {
       },
       async createDishes(menuId, rows) {
         return rows.map(({ rawText: _raw, ...d }) =>
-          db.addDish(menuId, { ...d, photoUrl: null, source: 'ai_generated', feedbackUp: 0, feedbackDown: 0 }),
+          db.addDish(menuId, {
+            ...d,
+            photoUrl: null,
+            source: 'ai_generated',
+            feedbackUp: 0,
+            feedbackDown: 0,
+          }),
         );
       },
       async listDishesForRestaurant(restaurantId) {
@@ -112,7 +125,8 @@ export class FakeDb implements DbPort {
       async upsertFeedback({ dishId, ...fields }) {
         let row = db.feedback.find((f) => f.dishId === dishId && f.userId === userId);
         if (!row) db.feedback.push((row = { dishId, userId }));
-        for (const [k, v] of Object.entries(fields)) if (v !== undefined) (row as unknown as Record<string, unknown>)[k] = v;
+        for (const [k, v] of Object.entries(fields))
+          if (v !== undefined) (row as unknown as Record<string, unknown>)[k] = v;
         const dish = db.dishes.get(dishId)!;
         const rows = db.feedback.filter((f) => f.dishId === dishId);
         dish.feedbackUp = rows.filter((f) => f.accurate === true).length;
@@ -122,7 +136,8 @@ export class FakeDb implements DbPort {
       async ownLiked(dishIds) {
         const m = new Map<string, boolean>();
         for (const f of db.feedback)
-          if (f.userId === userId && dishIds.includes(f.dishId) && f.liked !== undefined) m.set(f.dishId, f.liked);
+          if (f.userId === userId && dishIds.includes(f.dishId) && f.liked !== undefined)
+            m.set(f.dishId, f.liked);
         return m;
       },
       async feedbackStats(dishIds) {
@@ -143,7 +158,8 @@ export class FakeDb implements DbPort {
       },
       async upsertTasteProfile(p) {
         db.profiles.set(userId, p);
-        for (const k of [...db.matches.keys()]) if (k.startsWith(`${userId}:`)) db.matches.delete(k);
+        for (const k of [...db.matches.keys()])
+          if (k.startsWith(`${userId}:`)) db.matches.delete(k);
         return p;
       },
       async getMatches(dishIds) {
@@ -177,12 +193,18 @@ export const decoded = (over: Partial<DecodedDish> = {}): DecodedDish => ({
 
 export function fakeLlm() {
   return {
-    parseMenuImage: vi.fn(
-      async (): Promise<ParseMenuResult> => ({
-        restaurantGuess: { name: 'Queen of Sheba', cuisine: 'Ethiopian' },
-        dishes: [{ tempId: 't1', nativeName: 'Kitfo', price: '$18', rawText: 'Kitfo $18', confidence: 'high' }],
-      }),
-    ),
+    parseMenuImage: vi.fn(async (): Promise<ParseMenuResult> => ({
+      restaurantGuess: { name: 'Queen of Sheba', cuisine: 'Ethiopian' },
+      dishes: [
+        {
+          tempId: 't1',
+          nativeName: 'Kitfo',
+          price: '$18',
+          rawText: 'Kitfo $18',
+          confidence: 'high',
+        },
+      ],
+    })),
     decodeDishes: vi.fn(async (input: { dishes: unknown[] }) => input.dishes.map(() => decoded())),
   };
 }
@@ -209,7 +231,9 @@ export function fakeDeps(): Deps & { db: FakeDb; llm: ReturnType<typeof fakeLlm>
 }
 
 /** Builds a multipart/form-data body for fastify.inject. */
-export function multipart(files: { field: string; filename: string; type: string; data: Buffer }[]) {
+export function multipart(
+  files: { field: string; filename: string; type: string; data: Buffer }[],
+) {
   const boundary = `----fare${randomUUID()}`;
   const chunks: Buffer[] = [];
   for (const f of files) {
@@ -222,5 +246,8 @@ export function multipart(files: { field: string; filename: string; type: string
     );
   }
   chunks.push(Buffer.from(`--${boundary}--\r\n`));
-  return { payload: Buffer.concat(chunks), headers: { 'content-type': `multipart/form-data; boundary=${boundary}` } };
+  return {
+    payload: Buffer.concat(chunks),
+    headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
+  };
 }

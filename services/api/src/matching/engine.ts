@@ -64,7 +64,9 @@ function ingredientMatches(dishIngredient: string, term: string): boolean {
 }
 
 function hits(ingredients: readonly string[], terms: readonly string[]): string[] {
-  return [...new Set(terms.map(norm))].filter((t) => ingredients.some((i) => ingredientMatches(i, t)));
+  return [...new Set(terms.map(norm))].filter((t) =>
+    ingredients.some((i) => ingredientMatches(i, t)),
+  );
 }
 
 export function ingredientFit(ingredients: readonly string[], profile: TasteProfile) {
@@ -77,9 +79,14 @@ export function ingredientFit(ingredients: readonly string[], profile: TasteProf
   return { fit, favoriteHits, avoidedHits };
 }
 
-export function likedRateFit(likedCount: number, dislikedCount: number, ownLiked: boolean | null): number {
+export function likedRateFit(
+  likedCount: number,
+  dislikedCount: number,
+  ownLiked: boolean | null,
+): number {
   const { priorLiked, priorDisliked, ownRatingWeight } = MATCH_CONFIG.likedRate;
-  const aggregate = (likedCount + priorLiked) / (likedCount + dislikedCount + priorLiked + priorDisliked);
+  const aggregate =
+    (likedCount + priorLiked) / (likedCount + dislikedCount + priorLiked + priorDisliked);
   if (ownLiked === null) return aggregate;
   return (1 - ownRatingWeight) * aggregate + ownRatingWeight * (ownLiked ? 1 : 0);
 }
@@ -95,10 +102,16 @@ function formatList(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 
-function explain(breakdown: MatchBreakdown, profile: TasteProfile, dishSpice: number): string | null {
+function explain(
+  breakdown: MatchBreakdown,
+  profile: TasteProfile,
+  dishSpice: number,
+): string | null {
   const parts: string[] = [];
-  if (breakdown.avoidedHits.length) parts.push(`Contains ${formatList(breakdown.avoidedHits)}, which you avoid`);
-  if (breakdown.favoriteHits.length) parts.push(`Has ${formatList(breakdown.favoriteHits)}, which you like`);
+  if (breakdown.avoidedHits.length)
+    parts.push(`Contains ${formatList(breakdown.avoidedHits)}, which you avoid`);
+  if (breakdown.favoriteHits.length)
+    parts.push(`Has ${formatList(breakdown.favoriteHits)}, which you like`);
   if (dishSpice > profile.spiceTolerance) parts.push('Spicier than you usually like');
   return parts.length ? `${parts.join('. ')}.` : null;
 }
@@ -137,6 +150,9 @@ export function computeMatch(
   if (matchState === 'unrated') return { matchScore: null, matchState, explanation };
 
   const w = MATCH_CONFIG.weights;
-  const raw = w.spice * breakdown.spice + w.ingredients * breakdown.ingredients + w.likedRate * breakdown.likedRate;
+  const raw =
+    w.spice * breakdown.spice +
+    w.ingredients * breakdown.ingredients +
+    w.likedRate * breakdown.likedRate;
   return { matchScore: Math.round(clamp01(raw) * 100), matchState, explanation };
 }

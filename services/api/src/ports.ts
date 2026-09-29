@@ -67,7 +67,11 @@ export interface CachedMatch {
 
 /** Repositories scoped to one user's transaction (RLS applies). */
 export interface UserTx {
-  createRestaurant(input: { name: string; address: string | null; cuisine: string }): Promise<Restaurant>;
+  createRestaurant(input: {
+    name: string;
+    address: string | null;
+    cuisine: string;
+  }): Promise<Restaurant>;
   listRestaurants(q?: string): Promise<RestaurantSummary[]>;
   getRestaurant(id: string): Promise<Restaurant | null>;
   createMenu(restaurantId: string, source: MenuSource): Promise<{ id: string }>;

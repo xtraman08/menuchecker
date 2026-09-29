@@ -54,13 +54,25 @@ export function registerErrorHandling(app: FastifyInstance): void {
     if (err instanceof LlmError) {
       req.log.error({ err }, 'llm failure');
       const status = err instanceof LlmConfigError ? 503 : 502;
-      return reply.status(status).send(errorBody('UPSTREAM_ERROR', 'The menu reader is unavailable, please retry'));
+      return reply
+        .status(status)
+        .send(errorBody('UPSTREAM_ERROR', 'The menu reader is unavailable, please retry'));
+    }
+    // Postgres: a token whose user row no longer exists (e.g. after a DB reset),
+    // and writes RLS refused.
+    const pg = err as { code?: string; constraint?: string };
+    if (pg.code === '23503' && /(created_by|user_id)_fkey$/.test(pg.constraint ?? '')) {
+      return reply.status(401).send(errorBody('UNAUTHORIZED', 'Session expired, sign in again'));
+    }
+    if (pg.code === '42501') {
+      return reply.status(403).send(errorBody('FORBIDDEN', 'Not allowed'));
     }
     const status = (err as FastifyError).statusCode;
     if (status && status >= 400 && status < 500) {
-      const code: ErrorCode = (err as FastifyError).code === 'FST_REQ_FILE_TOO_LARGE'
-        ? 'PAYLOAD_TOO_LARGE'
-        : (STATUS_CODES[status] ?? 'BAD_REQUEST');
+      const code: ErrorCode =
+        (err as FastifyError).code === 'FST_REQ_FILE_TOO_LARGE'
+          ? 'PAYLOAD_TOO_LARGE'
+          : (STATUS_CODES[status] ?? 'BAD_REQUEST');
       return reply.status(status).send(errorBody(code, err.message));
     }
     req.log.error({ err }, 'unhandled error');

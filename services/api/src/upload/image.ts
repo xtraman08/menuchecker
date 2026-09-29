@@ -2,7 +2,13 @@ import sharp from 'sharp';
 import { AppError } from '../errors.js';
 
 /** Client-declared types we accept. The real format is checked from the bytes. */
-export const ACCEPTED_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp']);
+export const ACCEPTED_UPLOAD_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/heic',
+  'image/heif',
+  'image/webp',
+]);
 const DECODABLE_FORMATS = new Set(['jpeg', 'png', 'webp', 'heif']);
 const MAX_INPUT_PIXELS = 50_000_000;
 
@@ -29,7 +35,10 @@ export async function sanitizeImage(input: Buffer, maxEdge: number): Promise<San
     throw new AppError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Upload a JPEG, PNG or HEIC photo');
   }
   try {
-    const { data, info } = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, failOn: 'error' })
+    const { data, info } = await sharp(input, {
+      limitInputPixels: MAX_INPUT_PIXELS,
+      failOn: 'error',
+    })
       .rotate()
       .resize({ width: maxEdge, height: maxEdge, fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 85, mozjpeg: true })
@@ -37,6 +46,10 @@ export async function sanitizeImage(input: Buffer, maxEdge: number): Promise<San
     return { data, mime: 'image/jpeg', width: info.width, height: info.height };
   } catch {
     // e.g. HEIC variants the bundled libvips can't decode.
-    throw new AppError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Could not read this photo; try a JPEG or PNG');
+    throw new AppError(
+      415,
+      'UNSUPPORTED_MEDIA_TYPE',
+      'Could not read this photo; try a JPEG or PNG',
+    );
   }
 }

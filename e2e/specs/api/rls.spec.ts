@@ -95,16 +95,24 @@ test.describe('RLS directly in Postgres (runtime role fare_app)', () => {
       `select c.relname, c.relrowsecurity
          from pg_class c join pg_namespace n on n.oid = c.relnamespace
         where n.nspname = 'public' and c.relkind = 'r'
-          and c.relname not in ('schema_migrations', 'migrations', '_migrations')`,
+          and c.relname <> 'schema_migrations'`,
     );
     expect(rows.length).toBeGreaterThan(0);
     const without = rows.filter((r) => !r.relrowsecurity).map((r) => r.relname);
     expect(without, 'tables without RLS').toEqual([]);
   });
 
-  test('default deny: with no app.user_id, private tables return nothing', async () => {
+  test('default deny: with no app.user_id, no table returns rows', async () => {
     await asUser(null, async () => {
-      for (const table of ['taste_profiles', 'dish_feedback', 'dish_matches']) {
+      for (const table of [
+        'users',
+        'restaurants',
+        'menus',
+        'dishes',
+        'taste_profiles',
+        'dish_feedback',
+        'dish_matches',
+      ]) {
         const { rows } = await client.query(`select count(*)::int as n from ${table}`);
         expect(rows[0].n, `${table} rows visible without a user`).toBe(0);
       }

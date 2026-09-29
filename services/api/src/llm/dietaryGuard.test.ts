@@ -3,7 +3,10 @@ import { guardDietaryTags } from './dietaryGuard.js';
 
 describe('guardDietaryTags', () => {
   it('drops gluten_free when the dish is served with injera', () => {
-    const r = guardDietaryTags(['gluten_free', 'no_pork'], ['beef', 'mitmita', 'niter kibbeh', 'injera']);
+    const r = guardDietaryTags(
+      ['gluten_free', 'no_pork'],
+      ['beef', 'mitmita', 'niter kibbeh', 'injera'],
+    );
     expect(r.tags).toEqual(['no_pork']);
     expect(r.dropped).toEqual(['gluten_free']);
   });
@@ -15,7 +18,9 @@ describe('guardDietaryTags', () => {
 
   it('drops diet tags contradicted by meat, seafood, pork or beef', () => {
     expect(guardDietaryTags(['vegetarian', 'pescatarian'], ['chicken', 'egg']).tags).toEqual([]);
-    expect(guardDietaryTags(['shellfish_free', 'pescatarian'], ['shrimp']).tags).toEqual(['pescatarian']);
+    expect(guardDietaryTags(['shellfish_free', 'pescatarian'], ['shrimp']).tags).toEqual([
+      'pescatarian',
+    ]);
     expect(guardDietaryTags(['no_pork', 'halal'], ['smoked bacon']).tags).toEqual([]);
     expect(guardDietaryTags(['no_beef'], ['minced beef']).tags).toEqual([]);
   });
@@ -30,10 +35,9 @@ describe('guardDietaryTags', () => {
 
   it('matches whole words only', () => {
     // "coconut" is not "nut", "eggplant" is not "egg", "nutmeg" is not "nut".
-    expect(guardDietaryTags(['nut_free', 'vegan'], ['coconut', 'eggplant', 'nutmeg']).tags).toEqual([
-      'nut_free',
-      'vegan',
-    ]);
+    expect(guardDietaryTags(['nut_free', 'vegan'], ['coconut', 'eggplant', 'nutmeg']).tags).toEqual(
+      ['nut_free', 'vegan'],
+    );
     expect(guardDietaryTags(['nut_free'], ['peanut butter']).tags).toEqual([]);
   });
 

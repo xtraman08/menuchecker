@@ -92,7 +92,12 @@ const PNG = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
 const parseOk = {
   restaurantGuess: { name: 'Abyssinia Kitchen', cuisine: 'Ethiopian' },
   dishes: [
-    { nativeName: 'Kitfo', price: '$18', rawText: 'Kitfo - minced beef, mitmita, kibbeh', confidence: 'high' },
+    {
+      nativeName: 'Kitfo',
+      price: '$18',
+      rawText: 'Kitfo - minced beef, mitmita, kibbeh',
+      confidence: 'high',
+    },
     { nativeName: 'Doro Wat', price: '$17', rawText: 'Doro Wat', confidence: 'high' },
     { nativeName: 'Sh?ro', price: null, rawText: 'Sh?ro (smudged)', confidence: 'low' },
   ],
@@ -117,7 +122,11 @@ function card(index: number, overrides: Record<string, unknown> = {}) {
 const decodeInput = (n: number) => ({
   cuisine: 'Ethiopian',
   restaurantName: 'Abyssinia Kitchen',
-  dishes: Array.from({ length: n }, (_, i) => ({ nativeName: `Dish ${i}`, price: '$10', rawText: '' })),
+  dishes: Array.from({ length: n }, (_, i) => ({
+    nativeName: `Dish ${i}`,
+    price: '$10',
+    rawText: '',
+  })),
 });
 
 // ---------- parseMenuImage ----------
@@ -162,15 +171,20 @@ describe('parseMenuImage', () => {
   it('rejects unsupported or oversized images without calling the API', async () => {
     useReplies();
     await expect(parseMenuImage(PNG, 'image/heic')).rejects.toBeInstanceOf(LlmInputError);
-    await expect(parseMenuImage(Buffer.alloc(0), 'image/png')).rejects.toBeInstanceOf(LlmInputError);
-    await expect(parseMenuImage(Buffer.alloc(5 * 1024 * 1024 + 1), 'image/png')).rejects.toBeInstanceOf(
+    await expect(parseMenuImage(Buffer.alloc(0), 'image/png')).rejects.toBeInstanceOf(
       LlmInputError,
     );
+    await expect(
+      parseMenuImage(Buffer.alloc(5 * 1024 * 1024 + 1), 'image/png'),
+    ).rejects.toBeInstanceOf(LlmInputError);
     expect(fake.calls).toHaveLength(0);
   });
 
   it('retries once on invalid output, telling the model what was wrong', async () => {
-    const bad = { ...parseOk, dishes: [{ nativeName: 'Kitfo', price: '$18', confidence: 'certain' }] };
+    const bad = {
+      ...parseOk,
+      dishes: [{ nativeName: 'Kitfo', price: '$18', confidence: 'certain' }],
+    };
     useReplies({ json: bad }, { json: parseOk });
     const result = await parseMenuImage(PNG, 'image/png');
 
@@ -203,7 +217,10 @@ describe('parseMenuImage', () => {
   });
 
   it('retries truncated output', async () => {
-    useReplies({ text: '{"restaurantGuess": null, "dishes": [', stop: 'max_tokens' }, { json: parseOk });
+    useReplies(
+      { text: '{"restaurantGuess": null, "dishes": [', stop: 'max_tokens' },
+      { json: parseOk },
+    );
     await expect(parseMenuImage(PNG, 'image/png')).resolves.toHaveProperty('dishes');
     expect(fake.calls).toHaveLength(2);
   });
@@ -213,7 +230,11 @@ describe('parseMenuImage', () => {
       model: 'claude-opus-4-8',
       content: [
         { type: 'text', text: '{"partial":' },
-        { type: 'fallback', from: { model: 'claude-sonnet-5-5' }, to: { model: 'claude-opus-4-8' } },
+        {
+          type: 'fallback',
+          from: { model: 'claude-sonnet-5-5' },
+          to: { model: 'claude-opus-4-8' },
+        },
         { type: 'text', text: JSON.stringify(parseOk) },
       ],
     });
@@ -234,7 +255,10 @@ describe('parseMenuImage', () => {
   });
 
   it('logs one line per call without prompt or output text', async () => {
-    const bad = { ...parseOk, dishes: [{ nativeName: 'SECRET-DISH', price: null, confidence: 'x' }] };
+    const bad = {
+      ...parseOk,
+      dishes: [{ nativeName: 'SECRET-DISH', price: null, confidence: 'x' }],
+    };
     useReplies({ json: bad }, { json: parseOk });
     await parseMenuImage(PNG, 'image/png');
     expect(logs.map((l) => [l.level, l.obj.attempt, l.obj.valid, l.obj.fellBack])).toEqual([
@@ -242,13 +266,20 @@ describe('parseMenuImage', () => {
       ['info', 2, true, false],
     ]);
     expect(JSON.stringify(logs)).not.toContain('SECRET-DISH');
-    expect(logs[1]!.obj).toMatchObject({ servedModel: 'claude-sonnet-5-5', inputTokens: 1, outputTokens: 1 });
+    expect(logs[1]!.obj).toMatchObject({
+      servedModel: 'claude-sonnet-5-5',
+      inputTokens: 1,
+      outputTokens: 1,
+    });
   });
 
   it('opts into refusal fallbacks only for models that support them', async () => {
     useReplies({ json: parseOk });
     await parseMenuImage(PNG, 'image/png');
-    expect(fake.calls[0]).toMatchObject({ betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
+    expect(fake.calls[0]).toMatchObject({
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+    });
 
     vi.stubEnv('ANTHROPIC_MODEL', 'claude-haiku-4-5');
     useReplies({ json: parseOk });
@@ -276,7 +307,9 @@ describe('parseMenuImage', () => {
 
 describe('decodeDishes', () => {
   it('returns cards in input order, matched by index', async () => {
-    useReplies({ json: { dishes: [card(1, { texture: 'Second' }), card(0, { texture: 'First' })] } });
+    useReplies({
+      json: { dishes: [card(1, { texture: 'Second' }), card(0, { texture: 'First' })] },
+    });
     const result = await decodeDishes(decodeInput(2));
     expect(result.map((d) => d.texture)).toEqual(['First', 'Second']);
     expect(result[0]).not.toHaveProperty('index');
@@ -319,7 +352,9 @@ describe('decodeDishes', () => {
 
   it('normalises hyphenated anchors and empty notes', async () => {
     useReplies({
-      json: { dishes: [card(0, { anchor: 'Similar to a lentil stew - spiced red lentils', note: '' })] },
+      json: {
+        dishes: [card(0, { anchor: 'Similar to a lentil stew - spiced red lentils', note: '' })],
+      },
     });
     const [dish] = await decodeDishes(decodeInput(1));
     expect(dish!.anchor).toBe('Similar to a lentil stew — spiced red lentils');
@@ -340,7 +375,10 @@ describe('decodeDishes', () => {
     ['overlong texture', { texture: 'x'.repeat(61) }],
     ['extra field', { match_score: 100 }],
   ])('rejects %s after one retry', async (_label, overrides) => {
-    useReplies({ json: { dishes: [card(0, overrides)] } }, { json: { dishes: [card(0, overrides)] } });
+    useReplies(
+      { json: { dishes: [card(0, overrides)] } },
+      { json: { dishes: [card(0, overrides)] } },
+    );
     await expect(decodeDishes(decodeInput(1))).rejects.toBeInstanceOf(LlmOutputError);
     expect(fake.calls).toHaveLength(2);
   });
@@ -416,7 +454,10 @@ describe('untrusted menu text', () => {
 
   it('the escaped payload still round-trips to the original text', async () => {
     useReplies({ json: { dishes: [card(0)] } });
-    await decodeDishes({ ...decodeInput(1), dishes: [{ nativeName: 'Kitfo', price: null, rawText: injection }] });
+    await decodeDishes({
+      ...decodeInput(1),
+      dishes: [{ nativeName: 'Kitfo', price: null, rawText: injection }],
+    });
     const text = fake.userText();
     const json = text.slice(text.indexOf('<menu_data>') + 11, text.indexOf('</menu_data>'));
     expect(JSON.parse(json).dishes[0].rawText).toBe(injection);

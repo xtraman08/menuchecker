@@ -80,10 +80,7 @@ export const DecodedDishOutputSchema = decodedDishSchema
       .string()
       .transform(normaliseAnchor)
       .pipe(
-        z
-          .string()
-          .max(200)
-          .regex(ANCHOR_PATTERN, 'anchor must read "Similar to X — <what it is>"'),
+        z.string().max(200).regex(ANCHOR_PATTERN, 'anchor must read "Similar to X — <what it is>"'),
       ),
     // An empty note means "no note".
     note: z

@@ -5,13 +5,134 @@
 // broad ("butter" also hits "peanut butter"); false drops are the safe side.
 import type { DietaryRestriction } from '@fare/shared';
 
-const MEAT = ['beef', 'veal', 'steak', 'chicken', 'lamb', 'mutton', 'goat', 'pork', 'bacon', 'ham', 'lard', 'chorizo', 'sausage', 'duck', 'turkey', 'meat', 'tripe', 'liver', 'gelatin'];
-const SEAFOOD = ['fish', 'salmon', 'tuna', 'cod', 'tilapia', 'anchovy', 'anchovies', 'sardine', 'sardines', 'shrimp', 'prawn', 'prawns', 'crab', 'lobster', 'mussel', 'mussels', 'clam', 'clams', 'oyster', 'oysters', 'scallop', 'scallops', 'squid', 'octopus', 'fish sauce'];
-const DAIRY = ['milk', 'butter', 'ghee', 'niter kibbeh', 'kibbeh', 'cheese', 'ayib', 'paneer', 'yogurt', 'yoghurt', 'cream', 'labneh', 'kefir'];
+const MEAT = [
+  'beef',
+  'veal',
+  'steak',
+  'chicken',
+  'lamb',
+  'mutton',
+  'goat',
+  'pork',
+  'bacon',
+  'ham',
+  'lard',
+  'chorizo',
+  'sausage',
+  'duck',
+  'turkey',
+  'meat',
+  'tripe',
+  'liver',
+  'gelatin',
+];
+const SEAFOOD = [
+  'fish',
+  'salmon',
+  'tuna',
+  'cod',
+  'tilapia',
+  'anchovy',
+  'anchovies',
+  'sardine',
+  'sardines',
+  'shrimp',
+  'prawn',
+  'prawns',
+  'crab',
+  'lobster',
+  'mussel',
+  'mussels',
+  'clam',
+  'clams',
+  'oyster',
+  'oysters',
+  'scallop',
+  'scallops',
+  'squid',
+  'octopus',
+  'fish sauce',
+];
+const DAIRY = [
+  'milk',
+  'butter',
+  'ghee',
+  'niter kibbeh',
+  'kibbeh',
+  'cheese',
+  'ayib',
+  'paneer',
+  'yogurt',
+  'yoghurt',
+  'cream',
+  'labneh',
+  'kefir',
+];
 const OTHER_ANIMAL = ['egg', 'eggs', 'honey'];
-const GLUTEN = ['wheat', 'barley', 'rye', 'bread', 'breadcrumbs', 'injera', 'flour', 'pita', 'naan', 'chapati', 'roti', 'paratha', 'tortilla', 'couscous', 'bulgur', 'pasta', 'noodles', 'seitan', 'semolina', 'spelt', 'farro', 'malt', 'soy sauce', 'dumpling', 'dumplings', 'flatbread', 'kita', 'dabo'];
-const NUTS = ['almond', 'almonds', 'cashew', 'cashews', 'walnut', 'walnuts', 'pistachio', 'pistachios', 'hazelnut', 'hazelnuts', 'pecan', 'pecans', 'peanut', 'peanuts', 'nut', 'nuts'];
-const SHELLFISH = ['shrimp', 'prawn', 'prawns', 'crab', 'lobster', 'mussel', 'mussels', 'clam', 'clams', 'oyster', 'oysters', 'scallop', 'scallops', 'crayfish'];
+const GLUTEN = [
+  'wheat',
+  'barley',
+  'rye',
+  'bread',
+  'breadcrumbs',
+  'injera',
+  'flour',
+  'pita',
+  'naan',
+  'chapati',
+  'roti',
+  'paratha',
+  'tortilla',
+  'couscous',
+  'bulgur',
+  'pasta',
+  'noodles',
+  'seitan',
+  'semolina',
+  'spelt',
+  'farro',
+  'malt',
+  'soy sauce',
+  'dumpling',
+  'dumplings',
+  'flatbread',
+  'kita',
+  'dabo',
+];
+const NUTS = [
+  'almond',
+  'almonds',
+  'cashew',
+  'cashews',
+  'walnut',
+  'walnuts',
+  'pistachio',
+  'pistachios',
+  'hazelnut',
+  'hazelnuts',
+  'pecan',
+  'pecans',
+  'peanut',
+  'peanuts',
+  'nut',
+  'nuts',
+];
+const SHELLFISH = [
+  'shrimp',
+  'prawn',
+  'prawns',
+  'crab',
+  'lobster',
+  'mussel',
+  'mussels',
+  'clam',
+  'clams',
+  'oyster',
+  'oysters',
+  'scallop',
+  'scallops',
+  'crayfish',
+];
 
 /** Ingredients that contradict each tag. halal/kosher also depend on sourcing, so only pork is checked. */
 const CONFLICTS: Record<DietaryRestriction, readonly string[]> = {
@@ -39,7 +160,22 @@ const EXEMPT_BEFORE: Record<string, readonly string[]> = {
   butter: ['peanut', 'almond', 'cashew', 'nut', 'cocoa', 'shea', 'plant', 'vegan'],
   cheese: ['vegan', 'plant', 'cashew'],
   yogurt: ['coconut', 'soy', 'oat', 'plant'],
-  flour: ['chickpea', 'rice', 'teff', 'corn', 'maize', 'cassava', 'potato', 'tapioca', 'almond', 'lentil', 'bean', 'pea', 'buckwheat', 'sorghum'],
+  flour: [
+    'chickpea',
+    'rice',
+    'teff',
+    'corn',
+    'maize',
+    'cassava',
+    'potato',
+    'tapioca',
+    'almond',
+    'lentil',
+    'bean',
+    'pea',
+    'buckwheat',
+    'sorghum',
+  ],
   noodles: ['rice', 'glass', 'mung', 'buckwheat'],
   pasta: ['rice', 'chickpea', 'lentil'],
   tortilla: ['corn', 'maize'],
@@ -49,7 +185,9 @@ const EXEMPT_BEFORE: Record<string, readonly string[]> = {
 function mentions(ingredient: string, term: string): boolean {
   if (term.includes(' ')) return ingredient.includes(term);
   const words = ingredient.split(/[^\p{L}]+/u);
-  return words.some((w, i) => w === term && !(i > 0 && EXEMPT_BEFORE[term]?.includes(words[i - 1]!)));
+  return words.some(
+    (w, i) => w === term && !(i > 0 && EXEMPT_BEFORE[term]?.includes(words[i - 1]!)),
+  );
 }
 
 /** Returns the tags that survive plus the ones dropped (for logging). */

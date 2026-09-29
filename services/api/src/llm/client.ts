@@ -51,7 +51,9 @@ export function getMessagesApi(env: NodeJS.ProcessEnv = process.env): MessagesAp
   if (cached) return cached;
   const apiKey = env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) {
-    throw new LlmConfigError('ANTHROPIC_API_KEY is not set; menu scanning and decoding are unavailable');
+    throw new LlmConfigError(
+      'ANTHROPIC_API_KEY is not set; menu scanning and decoding are unavailable',
+    );
   }
   const client = new Anthropic({ apiKey, timeout: REQUEST_TIMEOUT_MS, maxRetries: MAX_RETRIES });
   cached = client.beta.messages;

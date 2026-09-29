@@ -2,7 +2,12 @@
 // DTO shapes come from @fare/shared so the API and app agree on them.
 import type { Confidence, DecodedDish as SharedDecodedDish } from '@fare/shared';
 
-export type { DecodeInput, ParsedDish, ParsedMenu as ParseMenuResult, RestaurantGuess } from '@fare/shared';
+export type {
+  DecodeInput,
+  ParsedDish,
+  ParsedMenu as ParseMenuResult,
+  RestaurantGuess,
+} from '@fare/shared';
 
 export interface DecodedDish extends SharedDecodedDish {
   spice: 0 | 1 | 2 | 3;

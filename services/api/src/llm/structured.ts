@@ -34,7 +34,9 @@ export async function callStructured<S extends z.ZodTypeAny>(
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     const content =
-      attempt === 1 ? call.content : [...call.content, { type: 'text' as const, text: retryNote(issues) }];
+      attempt === 1
+        ? call.content
+        : [...call.content, { type: 'text' as const, text: retryNote(issues) }];
 
     const params: Anthropic.Beta.MessageCreateParamsNonStreaming = {
       model: settings.model,
@@ -82,7 +84,9 @@ function logCall(
   message: Anthropic.Beta.BetaMessage,
   result: Validation<unknown>,
 ): void {
-  const usage = message.usage as Anthropic.Beta.BetaUsage & { iterations?: { type: string }[] | null };
+  const usage = message.usage as Anthropic.Beta.BetaUsage & {
+    iterations?: { type: string }[] | null;
+  };
   const fellBack =
     message.model !== requestedModel ||
     message.content.some((b) => (b.type as string) === 'fallback') ||
@@ -102,10 +106,14 @@ function logCall(
   };
   const log = getLogger();
   if (result.ok && !fellBack) log.info(entry, 'llm call');
-  else log.warn(entry, result.ok ? 'llm call served by fallback model' : 'llm call returned invalid output');
+  else
+    log.warn(
+      entry,
+      result.ok ? 'llm call served by fallback model' : 'llm call returned invalid output',
+    );
 }
 
-type Validation<T> ={ ok: true; value: T } | { ok: false; issues: string[]; fatal?: boolean };
+type Validation<T> = { ok: true; value: T } | { ok: false; issues: string[]; fatal?: boolean };
 
 function validate<S extends z.ZodTypeAny>(
   message: Anthropic.Beta.BetaMessage,
@@ -153,9 +161,13 @@ function validate<S extends z.ZodTypeAny>(
 function toUpstreamError(label: string, err: unknown): Error {
   if (err instanceof Anthropic.APIUserAbortError) return err;
   if (err instanceof Anthropic.APIError) {
-    return new LlmUpstreamError(`${label}: Claude API error ${err.status ?? ''}`.trim(), err.status, {
-      cause: err,
-    });
+    return new LlmUpstreamError(
+      `${label}: Claude API error ${err.status ?? ''}`.trim(),
+      err.status,
+      {
+        cause: err,
+      },
+    );
   }
   return new LlmUpstreamError(`${label}: Claude API request failed`, undefined, { cause: err });
 }

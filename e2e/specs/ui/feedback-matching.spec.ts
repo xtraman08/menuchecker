@@ -2,6 +2,7 @@
 import { expect, test } from '@playwright/test';
 import { ApiUser, dishByName, findSeededRestaurant } from '../../support/api.ts';
 import { ProfilePage } from '../../pages/index.ts';
+import { DIETARY_CAVEAT } from '../../support/testids.ts';
 import { startAsNewDiner } from '../../support/ui.ts';
 
 /** Gives a dish `n` more feedback entries from fresh diners (volume for match states). */
@@ -98,7 +99,11 @@ test('editing the taste profile later re-computes matches (vegetarian -> Kitfo 0
   await lib.goto();
   r = await lib.open(seeded.restaurant.id);
   await r.card(kitfo.id).expectComprehension('Kitfo');
-  await expect(r.card(kitfo.id).matchScore()).toHaveText(/\b0\b/);
+  const card = r.card(kitfo.id);
+  await expect(card.matchScore()).toHaveText(/\b0\b/);
+  // A dietary conflict is explained, with an honest "verify with the restaurant" caveat.
+  await expect(card.matchReason()).toBeVisible();
+  await expect(card.matchCaveat()).toContainText(DIETARY_CAVEAT);
 });
 
 test('match indicator shows honest confidence labels for the seeded states', async ({ page }) => {

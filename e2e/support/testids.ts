@@ -73,6 +73,8 @@ export const T = {
     matchScore: (id: string) => `dish-card-match-score-${id}`,
     matchState: (id: string) => `dish-card-match-state-${id}`,
     matchReason: (id: string) => `dish-card-match-reason-${id}`,
+    matchCaveat: (id: string) => `dish-card-match-caveat-${id}`,
+    noteCaveat: (id: string) => `dish-card-note-caveat-${id}`,
     add: (id: string) => `dish-card-add-${id}`,
     feedback: (id: string) => `dish-card-feedback-${id}`,
   },
@@ -123,3 +125,4 @@ export const SPICE_LABELS = ['No heat', 'Mild', 'Medium', 'Hot'] as const;
 export const ADVENTUROUSNESS_LABELS = ['Familiar', 'A little new', 'Adventurous'] as const; // 1..3
 export const AI_SOURCE_LABEL = /AI-written, not yet confirmed by diners/i;
 export const UNRATED_TEXT = /still learning your taste/i;
+export const DIETARY_CAVEAT = /verify with the restaurant/i;

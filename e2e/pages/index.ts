@@ -162,6 +162,8 @@ export class DishCardPO {
   matchUnrated = () => this.page.getByTestId(T.card.matchUnrated(this.id));
   matchScore = () => this.page.getByTestId(T.card.matchScore(this.id));
   matchState = () => this.page.getByTestId(T.card.matchState(this.id));
+  matchReason = () => this.page.getByTestId(T.card.matchReason(this.id));
+  matchCaveat = () => this.page.getByTestId(T.card.matchCaveat(this.id));
   feedbackCounts = () => this.page.getByTestId(T.card.feedbackCounts(this.id));
   photoOrPlaceholder = () =>
     this.page

@@ -42,6 +42,35 @@ test('seeded Ethiopian menu keeps native names', async () => {
   });
 });
 
+test('seeded feedback volume drives match states once the diner has a profile', async () => {
+  // db/seed: Doro Wat has 10 diners of feedback, Steak frites 3, Injera none.
+  // No spec adds feedback to Steak frites or Injera, so these states are stable.
+  await withUsers(1, async ([u]) => {
+    await u!.putTasteProfile({
+      dietaryRestrictions: [],
+      spiceTolerance: 2,
+      avoidedIngredients: [],
+      favoriteIngredients: [],
+      cuisinesTried: [],
+    });
+    const eth = (await findSeededRestaurant(u!, /ethiop/i)).dishes;
+    const bistro = (await findSeededRestaurant(u!, /french|bistro/i)).dishes;
+
+    const doro = dishByName(eth, /^doro w(a|o)t$/i);
+    expect(doro.source).toBe('diner_refined');
+    expect(doro.matchState).toBe('confident');
+    expect(doro.matchScore).not.toBeNull();
+
+    const frites = dishByName(bistro, /steak frites/i);
+    expect(frites.matchState).toBe('preliminary');
+    expect(frites.matchScore).not.toBeNull();
+
+    const injera = dishByName(eth, /^injera$/i);
+    expect(injera.matchState, 'no feedback volume -> unrated even with a profile').toBe('unrated');
+    expect(injera.matchScore).toBeNull();
+  });
+});
+
 test('feedback increments the accuracy counters by exactly one', async () => {
   await withUsers(2, async ([up, down]) => {
     const { restaurant, dishes } = await findSeededRestaurant(up!, /ethiop/i);

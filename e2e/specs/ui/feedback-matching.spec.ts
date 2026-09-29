@@ -100,3 +100,28 @@ test('editing the taste profile later re-computes matches (vegetarian -> Kitfo 0
   await r.card(kitfo.id).expectComprehension('Kitfo');
   await expect(r.card(kitfo.id).matchScore()).toHaveText(/\b0\b/);
 });
+
+test('match indicator shows honest confidence labels for the seeded states', async ({ page }) => {
+  // db/seed: Doro Wat has 10 diners of feedback (confident), Steak frites 3 (preliminary),
+  // Injera none (unrated even with a profile).
+  const api = await ApiUser.create();
+  const eth = await findSeededRestaurant(api, /ethiop/i);
+  const bistro = await findSeededRestaurant(api, /french|bistro/i);
+  await api.dispose();
+  const doro = dishByName(eth.dishes, /^doro w(a|o)t$/i);
+  const injera = dishByName(eth.dishes, /^injera$/i);
+  const frites = dishByName(bistro.dishes, /steak frites/i);
+
+  const lib = await startAsNewDiner(page, { spice: 2 });
+  let r = await lib.open(eth.restaurant.id);
+  await r.card(doro.id).expectScored();
+  await expect(r.card(doro.id).matchState()).toContainText(/based on solid feedback/i);
+  await expect(r.card(doro.id).source()).not.toContainText(/AI-written/i);
+  await r.card(injera.id).expectUnrated();
+
+  await lib.goto();
+  r = await lib.open(bistro.restaurant.id);
+  await r.card(frites.id).expectComprehension(frites.nativeName);
+  await r.card(frites.id).expectScored();
+  await expect(r.card(frites.id).matchState()).toContainText(/early estimate/i);
+});

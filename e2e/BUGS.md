@@ -44,6 +44,9 @@ ownership table in `docs/TEAM_PLAN.md`. Status: `open` / `fixed` (verified by re
   i.e. an `LlmError` from decode. It failed in both the API and UI specs in the same run. The Ethiopian decode passed.
   The Turkish decode passed on aae5fa2.
 - No API log was captured: Docker Desktop stopped right after the run.
+- Re-run on ac4e941 (with Claude API failure logging): not reproduced, Turkish decode passed in 10.6s.
+  Likely transient (two slow or invalid model responses in a row). Left open; if it recurs, the api log
+  now records status, error type, request id and duration for each failed call.
 
 ## Runs
 
@@ -52,3 +55,4 @@ ownership table in `docs/TEAM_PLAN.md`. Status: `open` / `fixed` (verified by re
 | 2026-09-29 | devops runs (pre-aae5fa2) | 33 passed / 3 failed             | B2, B3, B4                                                                       |
 | 2026-09-29 | aae5fa2                   | 36 passed / 0 failed / 0 skipped | Real Claude API; fresh DB; 34.6s                                                 |
 | 2026-09-29 | c11fac4                   | 34 passed / 2 failed / 0 skipped | B5; db on port 55432 (dev stack held 5432); Docker Desktop stopped after the run |
+| 2026-09-29 | ac4e941                   | 36 passed / 0 failed / 0 skipped | Real Claude API; fresh DB; 32.2s; B5 not reproduced                              |

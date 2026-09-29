@@ -28,7 +28,7 @@ A fresh browser context always starts at onboarding.
 
 ## Taste profile form (shared by onboarding and profile)
 
-- `profile-spice-<0|1|2|3>` – chips: No heat / Mild / Medium / Hot (selected chip has `aria-selected=true`)
+- `profile-spice-<0|1|2|3>` – chips: No heat / Mild / Medium / Hot (every chip, incl. filters and sort-toggle, has `aria-selected="true"|"false"`)
 - `profile-diet-<value>` – the shared DIETARY_RESTRICTIONS values: `vegetarian`, `vegan`, `pescatarian`, `gluten_free`, `dairy_free`, `nut_free`, `shellfish_free`, `halal`, `kosher`, `no_pork`, `no_beef`
 - `profile-fav-input`, `profile-fav-add`, `profile-fav-remove-<slug>` – favourite ingredients (stored lower-case)
 - `profile-avoid-input`, `profile-avoid-add`, `profile-avoid-remove-<slug>` – avoided ingredients
@@ -74,7 +74,8 @@ Layout order: photo, name, price, anchor, description, signals, note, provenance
 - `dish-card-anchor-<id>`, `dish-card-description-<id>`
 - `dish-card-spice-<id>` (text contains No heat / Mild / Medium / Hot), `dish-card-texture-<id>`, `dish-card-adventurousness-<id>` (Familiar / A little new / Adventurous)
 - `dish-card-note-<id>`
-- `dish-card-note-caveat-<id>` – "Dietary info is AI-generated — verify with the restaurant", shown when the note makes a dietary claim (e.g. "Vegan") and the dish isn't restaurant-verified
+- `dish-card-diet-tags-<id>` – "Marked as vegan, gluten free…" from `DishCard.dietaryTags` (AI-generated)
+- `dish-card-note-caveat-<id>` – "Dietary info is AI-generated — verify with the restaurant"; shown whenever dietary tags are present, or when the note makes a dietary claim (e.g. "Vegan") on a non-restaurant-verified dish
 - `dish-card-source-<id>` – "AI-written, not yet confirmed by diners" | "Refined by diners" | "Verified by the restaurant"
 - `dish-card-low-confidence-<id>` – when `confidence === 'low'`
 - `dish-card-feedback-counts-<id>` – "N diners found this accurate, M didn't" (when any feedback)
@@ -83,7 +84,7 @@ Layout order: photo, name, price, anchor, description, signals, note, provenance
   - `dish-card-match-score-<id>` – number 0–100 (preliminary/confident only)
   - `dish-card-match-state-<id>` – "Early estimate" | "Based on solid feedback"
   - `dish-card-match-reason-<id>` – `matchExplanation` text when the API sends one (may appear while unrated)
-  - `dish-card-match-caveat-<id>` – "Dietary info is AI-generated — verify with the restaurant", shown when the explanation mentions a diet/allergen
+  - `dish-card-match-caveat-<id>` – "Dietary info is AI-generated — verify with the restaurant", shown when `matchExplanationKind === "dietary"` or the explanation mentions a diet/allergen
 - `dish-card-add-<id>` – "Add to order" / "Add another (N)"
 - `dish-card-feedback-<id>` – "Rate this dish" → feedback screen
 

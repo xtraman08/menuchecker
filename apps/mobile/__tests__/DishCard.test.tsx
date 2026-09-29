@@ -19,6 +19,8 @@ const base: Dish = {
   matchScore: null,
   matchState: 'unrated',
   matchExplanation: null,
+  matchExplanationKind: null,
+  dietaryTags: [],
   feedbackUp: 0,
   feedbackDown: 0,
 };
@@ -158,6 +160,17 @@ describe('DishCard dietary caveat', () => {
     render(
       <DishCard dish={make({ matchScore: 0, matchState: 'confident', matchExplanation: 'Not suitable: vegetarian' })} />,
     );
+    expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
+  });
+
+  it('shows AI dietary tags with the caveat, even for restaurant-verified dishes', () => {
+    render(<DishCard dish={make({ note: null, dietaryTags: ['vegan', 'gluten_free'], source: 'restaurant_verified' })} />);
+    expect(screen.getByTestId('dish-card-diet-tags-kitfo')).toHaveTextContent(/vegan/);
+    expect(screen.getByTestId('dish-card-note-caveat-kitfo')).toHaveTextContent(caveat);
+  });
+
+  it('trusts matchExplanationKind "dietary" even when the text has no diet keyword', () => {
+    render(<DishCard dish={make({ matchExplanation: 'Might not suit you', matchExplanationKind: 'dietary' })} />);
     expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
   });
 

@@ -19,6 +19,8 @@ const dish = (id: string, over: Partial<DishCard> = {}): DishCard => ({
   matchScore: null,
   matchState: 'unrated',
   matchExplanation: null,
+  matchExplanationKind: null,
+  dietaryTags: [],
   feedbackUp: 0,
   feedbackDown: 0,
   ...over,

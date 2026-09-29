@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { DIETARY_LABELS } from '@fare/shared';
+
 import type { DishCard as Dish } from '@/api/types';
 import { adventureWord, DIETARY_CAVEAT, mentionsDiet, sourceLabel, spiceWord } from '@/lib/dish';
 import { color, radius, space, type } from '@/theme';
@@ -95,18 +97,7 @@ export function DishCard({
           </Signal>
         </View>
 
-        {dish.note ? (
-          <View style={styles.note}>
-            <Text style={styles.noteText} testID={`dish-card-note-${id}`}>
-              {dish.note}
-            </Text>
-            {dish.source !== 'restaurant_verified' && mentionsDiet(dish.note) ? (
-              <Text style={styles.caveat} testID={`dish-card-note-caveat-${id}`}>
-                {DIETARY_CAVEAT}
-              </Text>
-            ) : null}
-          </View>
-        ) : null}
+        <DietNote dish={dish} />
 
         <Provenance dish={dish} />
 
@@ -133,6 +124,38 @@ export function DishCard({
           </View>
         ) : null}
       </View>
+    </View>
+  );
+}
+
+/** Note plus AI-derived dietary tags, with the verify-with-restaurant caveat (CLAUDE.md §11). */
+function DietNote({ dish }: { dish: Dish }) {
+  const id = dish.id;
+  const tags = dish.dietaryTags ?? [];
+  if (!dish.note && tags.length === 0) return null;
+  const caveat = tags.length > 0 || (dish.source !== 'restaurant_verified' && mentionsDiet(dish.note));
+  return (
+    <View style={styles.note}>
+      {dish.note ? (
+        <Text style={styles.noteText} testID={`dish-card-note-${id}`}>
+          {dish.note}
+        </Text>
+      ) : null}
+      {tags.length ? (
+        <View style={styles.tags} testID={`dish-card-diet-tags-${id}`}>
+          <Text style={type.small}>Marked as</Text>
+          {tags.map((t) => (
+            <Text key={t} style={styles.tag}>
+              {DIETARY_LABELS[t]}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+      {caveat ? (
+        <Text style={styles.caveat} testID={`dish-card-note-caveat-${id}`}>
+          {DIETARY_CAVEAT}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -234,6 +257,17 @@ const styles = StyleSheet.create({
   pipOn: { backgroundColor: color.chili },
   note: { backgroundColor: color.paper, borderRadius: radius.sm, padding: space.sm, gap: space.xs },
   noteText: { fontSize: 14, lineHeight: 20, color: color.ink },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.xs },
+  tag: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: color.ink,
+    backgroundColor: color.card,
+    borderRadius: radius.sm,
+    paddingHorizontal: space.sm,
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
   caveat: { fontSize: 12, lineHeight: 16, color: color.ochre, fontWeight: '600' },
   provenance: { gap: space.xs, alignItems: 'flex-start' },
   sourceTag: { fontSize: 12, fontWeight: '600', paddingHorizontal: space.sm, paddingVertical: 3, borderRadius: radius.sm, overflow: 'hidden' },

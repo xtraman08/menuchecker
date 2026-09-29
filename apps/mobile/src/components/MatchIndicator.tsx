@@ -66,7 +66,7 @@ function Explanation({ dish }: { dish: DishCard }) {
       <Text style={type.small} testID={`dish-card-match-reason-${dish.id}`}>
         {dish.matchExplanation}
       </Text>
-      {mentionsDiet(dish.matchExplanation) ? (
+      {dish.matchExplanationKind === 'dietary' || mentionsDiet(dish.matchExplanation) ? (
         <Text style={styles.caveat} testID={`dish-card-match-caveat-${dish.id}`}>
           {DIETARY_CAVEAT}
         </Text>

@@ -65,6 +65,8 @@ export function Button({
       testID={testID}
       accessibilityRole="button"
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
+      aria-disabled={!!inactive}
+      aria-busy={!!loading}
       disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => [
@@ -100,6 +102,8 @@ export function Chip({
       testID={testID}
       accessibilityRole="button"
       accessibilityState={{ selected }}
+      // react-native-web ignores accessibilityState; aria-selected reaches the DOM.
+      aria-selected={selected}
       onPress={onPress}
       style={[styles.chip, selected && styles.chipSelected]}
     >

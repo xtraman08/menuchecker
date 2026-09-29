@@ -4,7 +4,7 @@
 import type { Api } from './client';
 import type { DishCard, Restaurant, RestaurantSummary, TasteProfile } from './types';
 
-type MockDish = DishCard & { restaurantId: string; ingredients: string[]; dietaryTags: string[] };
+type MockDish = DishCard & { restaurantId: string; ingredients: string[] };
 
 const MOCK_USER = '00000000-0000-0000-0000-000000000001';
 const EPOCH = '2026-09-01T00:00:00.000Z';
@@ -30,6 +30,7 @@ function dish(
     matchScore: null,
     matchState: 'unrated',
     matchExplanation: null,
+    matchExplanationKind: null,
     feedbackUp: 0,
     feedbackDown: 0,
     ingredients: [],
@@ -126,13 +127,16 @@ const DIET_CONFLICTS: Record<string, string[]> = {
   vegan: ['beef', 'chicken', 'lamb', 'pork', 'fish', 'egg', 'butter', 'cheese', 'beef broth'],
 };
 
-function computeMatch(d: MockDish, profile: TasteProfile | null): Pick<DishCard, 'matchScore' | 'matchState' | 'matchExplanation'> {
+function computeMatch(
+  d: MockDish,
+  profile: TasteProfile | null,
+): Pick<DishCard, 'matchScore' | 'matchState' | 'matchExplanation' | 'matchExplanationKind'> {
   const volume = d.feedbackUp + d.feedbackDown;
-  if (!profile || volume < 3) return { matchScore: null, matchState: 'unrated', matchExplanation: null };
+  if (!profile || volume < 3) return { matchScore: null, matchState: 'unrated', matchExplanation: null, matchExplanationKind: null };
   const state = volume >= 10 ? 'confident' : 'preliminary';
   for (const r of profile.dietaryRestrictions) {
     const hit = d.ingredients.find((i) => DIET_CONFLICTS[r.toLowerCase()]?.includes(i));
-    if (hit) return { matchScore: 0, matchState: state, matchExplanation: `Contains ${hit}, which doesn't fit ${r}` };
+    if (hit) return { matchScore: 0, matchState: state, matchExplanation: `Contains ${hit}, which doesn't fit ${r}`, matchExplanationKind: 'dietary' };
   }
   const spiceFit = 1 - Math.max(0, d.spice - profile.spiceTolerance) / 3;
   const fav = d.ingredients.filter((i) => profile.favoriteIngredients.includes(i)).length;
@@ -143,6 +147,7 @@ function computeMatch(d: MockDish, profile: TasteProfile | null): Pick<DishCard,
     matchScore: Math.round(100 * (0.35 * spiceFit + 0.35 * overlap + 0.3 * liked)),
     matchState: state,
     matchExplanation: null,
+    matchExplanationKind: null,
   };
 }
 
@@ -152,7 +157,7 @@ export function createMockApi(): Api {
   let n = 0;
 
   const card = (d: MockDish): DishCard => {
-    const { restaurantId: _r, ingredients: _i, dietaryTags: _t, ...rest } = d;
+    const { restaurantId: _r, ingredients: _i, ...rest } = d;
     return { ...rest, ...computeMatch(d, profile) };
   };
   const findRestaurant = (id: string) => {

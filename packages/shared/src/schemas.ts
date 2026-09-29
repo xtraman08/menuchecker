@@ -84,6 +84,8 @@ export const decodedDishSchema = z.object({
   note: z.string().trim().max(200).nullable(),
   ingredients: tagList,
   dietaryTags: z.array(dietaryRestrictionSchema).max(11),
+  /** `low` when the model doesn't recognise the dish; saved as the dish's confidence. */
+  confidence: confidenceSchema,
 });
 export type DecodedDish = z.infer<typeof decodedDishSchema>;
 

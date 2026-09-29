@@ -10,7 +10,7 @@ import {
 import { buildApp } from './app.js';
 import type { Config } from './config.js';
 import { LlmInputError, LlmOutputError, LlmUpstreamError } from './llm/index.js';
-import { fakeDeps, multipart, testConfig } from './test/fakes.js';
+import { decoded, fakeDeps, multipart, testConfig } from './test/fakes.js';
 
 let app: FastifyInstance | undefined;
 afterEach(async () => {
@@ -352,6 +352,22 @@ describe('restaurants', () => {
         { nativeName: 'Shiro', price: '$12', rawText: undefined },
       ],
     });
+  });
+
+  it('stores a low decode confidence on the card', async () => {
+    const { app, deps } = await setup();
+    const { headers } = await login(app);
+    deps.llm.decodeDishes.mockResolvedValueOnce([decoded({ confidence: 'low' }), decoded()]);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/restaurants',
+      payload: createBody,
+      headers,
+    });
+    expect(res.json().dishes.map((d: { confidence: string }) => d.confidence)).toEqual([
+      'low',
+      'low',
+    ]);
   });
 
   it('saves nothing when decoding fails', async () => {

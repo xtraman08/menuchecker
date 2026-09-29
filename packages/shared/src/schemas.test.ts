@@ -55,6 +55,7 @@ describe('shared schemas', () => {
       note: null,
       ingredients: [' Chicken ', 'Berbere'],
       dietaryTags: ['gluten_free'],
+      confidence: 'low',
     });
     expect(d.ingredients).toEqual(['chicken', 'berbere']);
     expect(decodedDishSchema.safeParse({ ...d, dietaryTags: ['paleo'] }).success).toBe(false);

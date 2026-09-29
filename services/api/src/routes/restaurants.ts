@@ -46,7 +46,7 @@ export async function restaurantRoutes(
           throw new AppError(502, 'UPSTREAM_ERROR', 'Could not decode every dish, please retry');
         const dec = out.data;
         // A dish we weren't sure we read correctly can't be decoded with high confidence.
-        const lowParse = d.confidence === 'low' || decoded[i]!.confidence === 'low';
+        const lowParse = d.confidence === 'low' || dec.confidence === 'low';
         return {
           nativeName: d.nativeName,
           price: d.price,

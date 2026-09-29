@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Fare",
+    "slug": "fare",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "fare",
+    "userInterfaceStyle": "light",
+    "web": {
+      "output": "single",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Fare reads the menu photo you pick so it can list and explain the dishes.",
+          "cameraPermission": "Fare uses the camera to photograph a menu so it can list and explain the dishes."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

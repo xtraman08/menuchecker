@@ -72,7 +72,9 @@ describe('DishCard comprehension content', () => {
 describe('DishCard match indicator', () => {
   it('unrated: shows "Still learning your taste" and no number', () => {
     render(<DishCard dish={make()} />);
-    expect(screen.getByTestId('dish-card-match-unrated-kitfo')).toHaveTextContent('Still learning your taste');
+    expect(screen.getByTestId('dish-card-match-unrated-kitfo')).toHaveTextContent(
+      'Still learning your taste',
+    );
     expect(screen.queryByTestId('dish-card-match-score-kitfo')).toBeNull();
   });
 
@@ -93,7 +95,9 @@ describe('DishCard match indicator', () => {
   it('confident: shows the score with the confident label', () => {
     render(<DishCard dish={make({ matchScore: 88, matchState: 'confident' })} />);
     expect(screen.getByTestId('dish-card-match-score-kitfo')).toHaveTextContent('88');
-    expect(screen.getByTestId('dish-card-match-state-kitfo')).toHaveTextContent('Based on solid feedback');
+    expect(screen.getByTestId('dish-card-match-state-kitfo')).toHaveTextContent(
+      'Based on solid feedback',
+    );
   });
 
   it('never shows a bare score when the comprehension content is missing', () => {
@@ -105,7 +109,11 @@ describe('DishCard match indicator', () => {
   it('shows the dietary-conflict reason with a zero score', () => {
     render(
       <DishCard
-        dish={make({ matchScore: 0, matchState: 'preliminary', matchExplanation: "Contains beef, which doesn't fit vegetarian" })}
+        dish={make({
+          matchScore: 0,
+          matchState: 'preliminary',
+          matchExplanation: "Contains beef, which doesn't fit vegetarian",
+        })}
       />,
     );
     expect(screen.getByTestId('dish-card-match-reason-kitfo')).toHaveTextContent(/vegetarian/);
@@ -151,8 +159,14 @@ describe('DishCard dietary caveat', () => {
   });
 
   it('shows the caveat next to a dietary match explanation, even while unrated', () => {
-    render(<DishCard dish={make({ matchExplanation: 'Not marked vegan', matchExplanationKind: 'dietary' })} />);
-    expect(screen.getByTestId('dish-card-match-reason-kitfo')).toHaveTextContent('Not marked vegan');
+    render(
+      <DishCard
+        dish={make({ matchExplanation: 'Not marked vegan', matchExplanationKind: 'dietary' })}
+      />,
+    );
+    expect(screen.getByTestId('dish-card-match-reason-kitfo')).toHaveTextContent(
+      'Not marked vegan',
+    );
     expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
   });
 
@@ -171,13 +185,25 @@ describe('DishCard dietary caveat', () => {
   });
 
   it('shows AI dietary tags with the caveat, even for restaurant-verified dishes', () => {
-    render(<DishCard dish={make({ note: null, dietaryTags: ['vegan', 'gluten_free'], source: 'restaurant_verified' })} />);
+    render(
+      <DishCard
+        dish={make({
+          note: null,
+          dietaryTags: ['vegan', 'gluten_free'],
+          source: 'restaurant_verified',
+        })}
+      />,
+    );
     expect(screen.getByTestId('dish-card-diet-tags-kitfo')).toHaveTextContent(/vegan/);
     expect(screen.getByTestId('dish-card-note-caveat-kitfo')).toHaveTextContent(caveat);
   });
 
   it('drives the explanation caveat from matchExplanationKind, not wording', () => {
-    render(<DishCard dish={make({ matchExplanation: 'Might not suit you', matchExplanationKind: 'dietary' })} />);
+    render(
+      <DishCard
+        dish={make({ matchExplanation: 'Might not suit you', matchExplanationKind: 'dietary' })}
+      />,
+    );
     expect(screen.getByTestId('dish-card-match-caveat-kitfo')).toHaveTextContent(caveat);
   });
 

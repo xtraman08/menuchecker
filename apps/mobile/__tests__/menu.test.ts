@@ -63,28 +63,25 @@ describe('visibleDishes', () => {
   ];
 
   it('keeps menu order by default', () => {
-    expect(visibleDishes(dishes, { spice: 'any', adventure: 'any', sort: 'menu' }).map((d) => d.id)).toEqual([
-      'mild',
-      'hot',
-      'none',
-    ]);
+    expect(
+      visibleDishes(dishes, { spice: 'any', adventure: 'any', sort: 'menu' }).map((d) => d.id),
+    ).toEqual(['mild', 'hot', 'none']);
   });
 
   it('sorts by match only when asked, unrated last', () => {
-    expect(visibleDishes(dishes, { spice: 'any', adventure: 'any', sort: 'match' }).map((d) => d.id)).toEqual([
-      'hot',
-      'mild',
-      'none',
-    ]);
+    expect(
+      visibleDishes(dishes, { spice: 'any', adventure: 'any', sort: 'match' }).map((d) => d.id),
+    ).toEqual(['hot', 'mild', 'none']);
   });
 
   it('filters by spice and adventurousness', () => {
-    expect(visibleDishes(dishes, { spice: 'mild', adventure: 'any', sort: 'menu' }).map((d) => d.id)).toEqual([
-      'mild',
-      'none',
-    ]);
-    expect(visibleDishes(dishes, { spice: 'any', adventure: 'adventurous', sort: 'menu' }).map((d) => d.id)).toEqual([
-      'hot',
-    ]);
+    expect(
+      visibleDishes(dishes, { spice: 'mild', adventure: 'any', sort: 'menu' }).map((d) => d.id),
+    ).toEqual(['mild', 'none']);
+    expect(
+      visibleDishes(dishes, { spice: 'any', adventure: 'adventurous', sort: 'menu' }).map(
+        (d) => d.id,
+      ),
+    ).toEqual(['hot']);
   });
 });

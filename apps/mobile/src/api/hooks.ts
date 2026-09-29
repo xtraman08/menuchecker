@@ -10,11 +10,18 @@ export const keys = {
 };
 
 export function useRestaurants(q: string) {
-  return useQuery({ queryKey: keys.restaurants(q), queryFn: () => api.listRestaurants(q || undefined) });
+  return useQuery({
+    queryKey: keys.restaurants(q),
+    queryFn: () => api.listRestaurants(q || undefined),
+  });
 }
 
 export function useRestaurant(id: string) {
-  return useQuery({ queryKey: keys.restaurant(id), queryFn: () => api.getRestaurant(id), enabled: !!id });
+  return useQuery({
+    queryKey: keys.restaurant(id),
+    queryFn: () => api.getRestaurant(id),
+    enabled: !!id,
+  });
 }
 
 export function useTasteProfile() {

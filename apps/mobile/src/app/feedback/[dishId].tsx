@@ -10,7 +10,10 @@ import { sourceLabel } from '@/lib/dish';
 import { color, radius, space, type } from '@/theme';
 
 export default function Feedback() {
-  const { dishId = '', restaurantId = '' } = useLocalSearchParams<{ dishId: string; restaurantId: string }>();
+  const { dishId = '', restaurantId = '' } = useLocalSearchParams<{
+    dishId: string;
+    restaurantId: string;
+  }>();
   const detail = useRestaurant(restaurantId);
   const send = useSendFeedback(restaurantId);
   const [accurate, setAccurate] = useState<boolean | undefined>();
@@ -50,7 +53,8 @@ export default function Feedback() {
           Thanks, your feedback is saved
         </Text>
         <Text style={type.body}>
-          It helps correct {dish.nativeName}'s description for the next diner and tunes your matches.
+          It helps correct {dish.nativeName}'s description for the next diner and tunes your
+          matches.
         </Text>
         <Button label="Back to the menu" onPress={() => router.back()} testID="feedback-done" />
       </Screen>
@@ -69,8 +73,18 @@ export default function Feedback() {
 
       <Section title="Was the description accurate?">
         <View style={styles.row}>
-          <Chip label="Yes, spot on" selected={accurate === true} onPress={() => setAccurate(true)} testID="feedback-accurate-yes" />
-          <Chip label="Not really" selected={accurate === false} onPress={() => setAccurate(false)} testID="feedback-accurate-no" />
+          <Chip
+            label="Yes, spot on"
+            selected={accurate === true}
+            onPress={() => setAccurate(true)}
+            testID="feedback-accurate-yes"
+          />
+          <Chip
+            label="Not really"
+            selected={accurate === false}
+            onPress={() => setAccurate(false)}
+            testID="feedback-accurate-no"
+          />
         </View>
       </Section>
 
@@ -87,14 +101,29 @@ export default function Feedback() {
         />
       </Section>
 
-      <Section title="Tried it?" hint="Tell us if you'd order it again. This shapes your match scores.">
+      <Section
+        title="Tried it?"
+        hint="Tell us if you'd order it again. This shapes your match scores."
+      >
         <View style={styles.row}>
-          <Chip label="Liked it" selected={liked === true} onPress={() => setLiked(true)} testID="feedback-liked-yes" />
-          <Chip label="Not for me" selected={liked === false} onPress={() => setLiked(false)} testID="feedback-liked-no" />
+          <Chip
+            label="Liked it"
+            selected={liked === true}
+            onPress={() => setLiked(true)}
+            testID="feedback-liked-yes"
+          />
+          <Chip
+            label="Not for me"
+            selected={liked === false}
+            onPress={() => setLiked(false)}
+            testID="feedback-liked-no"
+          />
         </View>
       </Section>
 
-      {send.isError ? <ErrorText testID="feedback-error">{errorMessage(send.error)}</ErrorText> : null}
+      {send.isError ? (
+        <ErrorText testID="feedback-error">{errorMessage(send.error)}</ErrorText>
+      ) : null}
       <Button
         label="Send feedback"
         disabled={empty}
@@ -107,7 +136,12 @@ export default function Feedback() {
 }
 
 const styles = StyleSheet.create({
-  summary: { gap: space.sm, backgroundColor: color.card, padding: space.lg, borderRadius: radius.lg },
+  summary: {
+    gap: space.sm,
+    backgroundColor: color.card,
+    padding: space.lg,
+    borderRadius: radius.lg,
+  },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   input: {
     minHeight: 44,

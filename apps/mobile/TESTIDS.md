@@ -8,16 +8,16 @@ Placeholders: `<id>` = server id (restaurant / dish), `<tempId>` = `ParsedDish.t
 
 ## Routes
 
-| URL | Screen |
-|---|---|
-| `/` | redirects to `/onboarding` (first visit) or `/library` |
-| `/onboarding` | taste profile questions, skippable |
-| `/library` | shared restaurant library + search |
-| `/restaurant/<id>` | decoded menu |
-| `/scan` | camera / library capture + progress |
-| `/review` | review/edit parsed dishes (or manual entry if opened without a scan) |
-| `/feedback/<dishId>?restaurantId=<id>` | dish feedback |
-| `/profile` | edit taste profile |
+| URL                                    | Screen                                                               |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `/`                                    | redirects to `/onboarding` (first visit) or `/library`               |
+| `/onboarding`                          | taste profile questions, skippable                                   |
+| `/library`                             | shared restaurant library + search                                   |
+| `/restaurant/<id>`                     | decoded menu                                                         |
+| `/scan`                                | camera / library capture + progress                                  |
+| `/review`                              | review/edit parsed dishes (or manual entry if opened without a scan) |
+| `/feedback/<dishId>?restaurantId=<id>` | dish feedback                                                        |
+| `/profile`                             | edit taste profile                                                   |
 
 "Onboarded" is a localStorage flag (`fare.onboarded = "1"`); the API token is `fare.token`.
 A fresh browser context always starts at onboarding.

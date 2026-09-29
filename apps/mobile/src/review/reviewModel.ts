@@ -41,7 +41,9 @@ export function reviewReducer(state: ReviewState, action: ReviewAction): ReviewS
     case 'edit':
       return {
         ...state,
-        items: state.items.map((i) => (i.tempId === action.tempId ? { ...i, [action.field]: action.value } : i)),
+        items: state.items.map((i) =>
+          i.tempId === action.tempId ? { ...i, [action.field]: action.value } : i,
+        ),
       };
     case 'discard':
     case 'restore': {
@@ -57,7 +59,14 @@ export function reviewReducer(state: ReviewState, action: ReviewAction): ReviewS
         manualCount,
         items: [
           ...state.items,
-          { tempId: `manual-${manualCount}`, nativeName: '', price: '', rawText: '', confidence: 'manual', discarded: false },
+          {
+            tempId: `manual-${manualCount}`,
+            nativeName: '',
+            price: '',
+            rawText: '',
+            confidence: 'manual',
+            discarded: false,
+          },
         ],
       };
     }
@@ -79,12 +88,17 @@ export function discardedItems(state: ReviewState): ReviewItem[] {
 }
 
 /** Returns a reason the menu can't be saved yet, or null when it can. */
-export function saveBlocker(state: ReviewState, restaurantName: string, cuisine: string): string | null {
+export function saveBlocker(
+  state: ReviewState,
+  restaurantName: string,
+  cuisine: string,
+): string | null {
   if (!restaurantName.trim()) return 'Add the restaurant name.';
   if (!cuisine.trim()) return 'Add the cuisine, e.g. Ethiopian.';
   const active = activeItems(state);
   if (active.length === 0) return 'Keep or add at least one dish.';
-  if (active.some((i) => !i.nativeName.trim())) return 'Every dish needs a name. Fill it in or discard it.';
+  if (active.some((i) => !i.nativeName.trim()))
+    return 'Every dish needs a name. Fill it in or discard it.';
   return null;
 }
 

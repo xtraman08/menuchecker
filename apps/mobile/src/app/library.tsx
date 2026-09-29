@@ -39,7 +39,9 @@ export default function Library() {
 
       <View style={styles.intro}>
         <Text style={type.title}>Menus other diners have decoded</Text>
-        <Text style={type.body}>Open one to see what every dish is, or scan a new menu to add it.</Text>
+        <Text style={type.body}>
+          Open one to see what every dish is, or scan a new menu to add it.
+        </Text>
         {isMockApi ? (
           <Text style={type.small} testID="library-mock-notice">
             Demo data: no API URL is configured.
@@ -47,7 +49,11 @@ export default function Library() {
         ) : null}
       </View>
 
-      <Button label="Scan a menu" onPress={() => router.push('/scan')} testID="library-scan-button" />
+      <Button
+        label="Scan a menu"
+        onPress={() => router.push('/scan')}
+        testID="library-scan-button"
+      />
 
       <TextInput
         value={search}
@@ -65,7 +71,12 @@ export default function Library() {
       ) : restaurants.isError ? (
         <View style={{ gap: space.sm }}>
           <ErrorText testID="library-error">{errorMessage(restaurants.error)}</ErrorText>
-          <Button label="Try again" variant="secondary" onPress={() => restaurants.refetch()} testID="library-retry" />
+          <Button
+            label="Try again"
+            variant="secondary"
+            onPress={() => restaurants.refetch()}
+            testID="library-retry"
+          />
         </View>
       ) : restaurants.data.length === 0 ? (
         <Text style={type.body} testID="library-empty">
@@ -96,9 +107,7 @@ function RestaurantRow({ r }: { r: RestaurantSummary }) {
         <Text style={type.dishNameCompact} testID={`library-item-name-${r.id}`}>
           {r.name}
         </Text>
-        <Text style={type.small}>
-          {[r.cuisine, r.address].filter(Boolean).join(', ')}
-        </Text>
+        <Text style={type.small}>{[r.cuisine, r.address].filter(Boolean).join(', ')}</Text>
       </View>
       {typeof r.dishCount === 'number' ? (
         <Text style={type.small}>

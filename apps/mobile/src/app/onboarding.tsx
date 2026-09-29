@@ -25,9 +25,16 @@ export default function Onboarding() {
       testID="onboarding-screen"
       footer={
         <View style={styles.footer}>
-          {save.isError ? <ErrorText testID="onboarding-error">{errorMessage(save.error)}</ErrorText> : null}
+          {save.isError ? (
+            <ErrorText testID="onboarding-error">{errorMessage(save.error)}</ErrorText>
+          ) : null}
           <View style={styles.footerRow}>
-            <Button label="Skip for now" variant="quiet" onPress={finish} testID="onboarding-skip" />
+            <Button
+              label="Skip for now"
+              variant="quiet"
+              onPress={finish}
+              testID="onboarding-skip"
+            />
             <Button
               label="Save and continue"
               onPress={() => save.mutate(profile, { onSuccess: finish })}
@@ -42,8 +49,8 @@ export default function Onboarding() {
       <View style={{ gap: space.sm }}>
         <Heading testID="onboarding-title">A few questions so menus make sense to you</Heading>
         <Text style={type.body}>
-          Every dish is explained whether or not you answer. Your answers let Fare start estimating which dishes
-          you'll like. You can change them any time.
+          Every dish is explained whether or not you answer. Your answers let Fare start estimating
+          which dishes you'll like. You can change them any time.
         </Text>
       </View>
       <TasteProfileForm value={profile} onChange={setProfile} />
@@ -59,5 +66,12 @@ const styles = StyleSheet.create({
     padding: space.lg,
     gap: space.sm,
   },
-  footerRow: { flexDirection: 'row', gap: space.md, alignItems: 'center', maxWidth: 640, width: '100%', alignSelf: 'center' },
+  footerRow: {
+    flexDirection: 'row',
+    gap: space.md,
+    alignItems: 'center',
+    maxWidth: 640,
+    width: '100%',
+    alignSelf: 'center',
+  },
 });

@@ -8,7 +8,14 @@ export default function Index() {
   const { onboarded } = useAppState();
   if (onboarded === null) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: color.paper }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: color.paper,
+        }}
+      >
         <ActivityIndicator color={color.ink} testID="app-loading" />
       </View>
     );

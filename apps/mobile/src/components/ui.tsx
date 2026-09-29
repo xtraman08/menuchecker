@@ -80,7 +80,9 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={variant === 'primary' ? color.card : color.ink} />
       ) : (
-        <Text style={[styles.buttonText, variant === 'primary' && { color: color.card }]}>{label}</Text>
+        <Text style={[styles.buttonText, variant === 'primary' && { color: color.card }]}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
@@ -134,7 +136,15 @@ export function Heading({ children, testID }: { children: ReactNode; testID?: st
   );
 }
 
-export function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+export function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <View style={{ gap: space.sm }}>
       <Text style={[type.label, { fontSize: 16 }]} accessibilityRole="header">

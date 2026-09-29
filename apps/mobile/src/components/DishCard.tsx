@@ -133,7 +133,8 @@ function DietNote({ dish }: { dish: Dish }) {
   const id = dish.id;
   const tags = dish.dietaryTags ?? [];
   if (!dish.note && tags.length === 0) return null;
-  const caveat = tags.length > 0 || (dish.source !== 'restaurant_verified' && mentionsDiet(dish.note));
+  const caveat =
+    tags.length > 0 || (dish.source !== 'restaurant_verified' && mentionsDiet(dish.note));
   return (
     <View style={styles.note}>
       {dish.note ? (
@@ -171,7 +172,9 @@ function DishPhoto({ dish, size }: { dish: Dish; size: 'hero' | 'thumb' }) {
         accessible
         accessibilityLabel={`No photo of ${dish.nativeName} yet`}
       >
-        <Text style={styles.placeholderInitial}>{dish.nativeName.trim().charAt(0).toUpperCase()}</Text>
+        <Text style={styles.placeholderInitial}>
+          {dish.nativeName.trim().charAt(0).toUpperCase()}
+        </Text>
         {size === 'hero' ? <Text style={type.small}>No photo yet</Text> : null}
       </View>
     );
@@ -190,7 +193,11 @@ function DishPhoto({ dish, size }: { dish: Dish; size: 'hero' | 'thumb' }) {
 
 function SpicePips({ spice }: { spice: number }) {
   return (
-    <View style={styles.pips} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <View
+      style={styles.pips}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       {[1, 2, 3].map((i) => (
         <View key={i} style={[styles.pip, i <= spice && styles.pipOn]} />
       ))}
@@ -198,7 +205,15 @@ function SpicePips({ spice }: { spice: number }) {
   );
 }
 
-function Signal({ label, testID, children }: { label: string; testID: string; children: ReactNode }) {
+function Signal({
+  label,
+  testID,
+  children,
+}: {
+  label: string;
+  testID: string;
+  children: ReactNode;
+}) {
   return (
     <View style={styles.signal} testID={testID}>
       <Text style={type.small}>{label}</Text>
@@ -213,7 +228,10 @@ function Provenance({ dish }: { dish: Dish }) {
   const votes = dish.feedbackUp + dish.feedbackDown;
   return (
     <View style={styles.provenance}>
-      <Text style={[styles.sourceTag, ai ? styles.sourceAi : styles.sourceHuman]} testID={`dish-card-source-${id}`}>
+      <Text
+        style={[styles.sourceTag, ai ? styles.sourceAi : styles.sourceHuman]}
+        testID={`dish-card-source-${id}`}
+      >
         {sourceLabel(dish.source)}
       </Text>
       {dish.confidence === 'low' ? (
@@ -223,7 +241,8 @@ function Provenance({ dish }: { dish: Dish }) {
       ) : null}
       {votes > 0 ? (
         <Text style={type.small} testID={`dish-card-feedback-counts-${id}`}>
-          {dish.feedbackUp} {dish.feedbackUp === 1 ? 'diner' : 'diners'} found this accurate, {dish.feedbackDown} didn't
+          {dish.feedbackUp} {dish.feedbackUp === 1 ? 'diner' : 'diners'} found this accurate,{' '}
+          {dish.feedbackDown} didn't
         </Text>
       ) : null}
     </View>
@@ -240,8 +259,20 @@ const styles = StyleSheet.create({
   },
   padded: { paddingHorizontal: space.lg },
   body: { paddingBottom: space.lg, gap: space.md },
-  compactTop: { flexDirection: 'row', gap: space.md, padding: space.lg, paddingBottom: 0, alignItems: 'center' },
-  titleRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.md, paddingTop: space.md, paddingBottom: space.sm },
+  compactTop: {
+    flexDirection: 'row',
+    gap: space.md,
+    padding: space.lg,
+    paddingBottom: 0,
+    alignItems: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: space.md,
+    paddingTop: space.md,
+    paddingBottom: space.sm,
+  },
   price: { fontSize: 17, fontWeight: '600', color: color.ink, fontVariant: ['tabular-nums'] },
   hero: { width: '100%', aspectRatio: 16 / 9, backgroundColor: color.placeholder },
   thumb: { width: 72, height: 72, borderRadius: radius.md, backgroundColor: color.placeholder },
@@ -270,7 +301,14 @@ const styles = StyleSheet.create({
   },
   caveat: { fontSize: 12, lineHeight: 16, color: color.ochre, fontWeight: '600' },
   provenance: { gap: space.xs, alignItems: 'flex-start' },
-  sourceTag: { fontSize: 12, fontWeight: '600', paddingHorizontal: space.sm, paddingVertical: 3, borderRadius: radius.sm, overflow: 'hidden' },
+  sourceTag: {
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: space.sm,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+  },
   sourceAi: { backgroundColor: color.ochreSoft, color: color.ochre },
   sourceHuman: { backgroundColor: color.tealSoft, color: color.teal },
   actions: { flexDirection: 'row', gap: space.sm, alignItems: 'center' },

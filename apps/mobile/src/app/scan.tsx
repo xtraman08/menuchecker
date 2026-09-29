@@ -36,11 +36,17 @@ export default function Scan() {
     if (source === 'camera' && Platform.OS !== 'web') {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
-        setPickError('Camera access is off. Allow it in Settings, or choose a photo from your library instead.');
+        setPickError(
+          'Camera access is off. Allow it in Settings, or choose a photo from your library instead.',
+        );
         return;
       }
     }
-    const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.8, exif: false };
+    const opts: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ['images'],
+      quality: 0.8,
+      exif: false,
+    };
     let res: ImagePicker.ImagePickerResult;
     try {
       res =
@@ -53,7 +59,9 @@ export default function Scan() {
         try {
           res = await ImagePicker.launchImageLibraryAsync(opts);
         } catch {
-          setPickError("Couldn't open a photo picker. Try a different browser, or enter the dishes by hand.");
+          setPickError(
+            "Couldn't open a photo picker. Try a different browser, or enter the dishes by hand.",
+          );
           return;
         }
       } else {
@@ -82,19 +90,23 @@ export default function Scan() {
       <View style={{ gap: space.sm }}>
         <Text style={type.title}>Photograph the menu</Text>
         <Text style={type.body}>
-          Get the dish names and prices in frame, one page at a time. You'll check the list before anything is
-          saved.
+          Get the dish names and prices in frame, one page at a time. You'll check the list before
+          anything is saved.
         </Text>
       </View>
 
       {busy ? (
         <View style={styles.progress} testID="scan-progress" accessibilityLiveRegion="polite">
-          {preview ? <Image source={{ uri: preview }} style={styles.preview} resizeMode="cover" /> : null}
+          {preview ? (
+            <Image source={{ uri: preview }} style={styles.preview} resizeMode="cover" />
+          ) : null}
           <View style={styles.progressRow}>
             <ActivityIndicator color={color.ink} />
             <View style={{ flex: 1 }}>
               <Text style={type.label}>Reading the menu</Text>
-              <Text style={type.small}>Finding dish names and prices. This usually takes 10 to 30 seconds.</Text>
+              <Text style={type.small}>
+                Finding dish names and prices. This usually takes 10 to 30 seconds.
+              </Text>
             </View>
           </View>
         </View>
@@ -114,7 +126,9 @@ export default function Scan() {
       {scan.isError ? (
         <View style={{ gap: space.sm }}>
           <ErrorText testID="scan-error">{errorMessage(scan.error)}</ErrorText>
-          <Text style={type.small}>Try a sharper, well-lit photo, or enter the dishes by hand.</Text>
+          <Text style={type.small}>
+            Try a sharper, well-lit photo, or enter the dishes by hand.
+          </Text>
         </View>
       ) : null}
 
@@ -134,7 +148,17 @@ export default function Scan() {
 }
 
 const styles = StyleSheet.create({
-  progress: { gap: space.md, backgroundColor: color.card, borderRadius: radius.lg, padding: space.lg },
+  progress: {
+    gap: space.md,
+    backgroundColor: color.card,
+    borderRadius: radius.lg,
+    padding: space.lg,
+  },
   progressRow: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
-  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: color.placeholder },
+  preview: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: radius.md,
+    backgroundColor: color.placeholder,
+  },
 });

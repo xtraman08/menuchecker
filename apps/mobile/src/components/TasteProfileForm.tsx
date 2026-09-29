@@ -46,7 +46,8 @@ export function TasteProfileForm({
   value: TasteProfile;
   onChange: (p: TasteProfile) => void;
 }) {
-  const set = <K extends keyof TasteProfile>(k: K, v: TasteProfile[K]) => onChange({ ...value, [k]: v });
+  const set = <K extends keyof TasteProfile>(k: K, v: TasteProfile[K]) =>
+    onChange({ ...value, [k]: v });
   const customCuisines = value.cuisinesTried.filter((c) => !CUISINE_OPTIONS.includes(c));
 
   return (

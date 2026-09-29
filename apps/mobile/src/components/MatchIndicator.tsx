@@ -4,7 +4,13 @@ import type { DishCard } from '@/api/types';
 import { DIETARY_CAVEAT, matchStateLabel, matchWord, shouldShowScore } from '@/lib/dish';
 import { color, radius, space, type } from '@/theme';
 
-export function MatchIndicator({ dish, emphasis }: { dish: DishCard; emphasis: 'secondary' | 'prominent' }) {
+export function MatchIndicator({
+  dish,
+  emphasis,
+}: {
+  dish: DishCard;
+  emphasis: 'secondary' | 'prominent';
+}) {
   const id = dish.id;
 
   if (!shouldShowScore(dish)) {
@@ -14,9 +20,10 @@ export function MatchIndicator({ dish, emphasis }: { dish: DishCard; emphasis: '
           Still learning your taste
         </Text>
         <Text style={type.small}>
-          No match score yet. It appears once you have a taste profile and a few diners have rated this dish.
+          No match score yet. It appears once you have a taste profile and a few diners have rated
+          this dish.
         </Text>
-          <Explanation dish={dish} />
+        <Explanation dish={dish} />
       </View>
     );
   }
@@ -78,10 +85,21 @@ function Explanation({ dish }: { dish: DishCard }) {
 const styles = StyleSheet.create({
   caveat: { fontSize: 12, lineHeight: 16, color: color.ochre, fontWeight: '600' },
   box: { borderRadius: radius.md, padding: space.md, gap: space.sm },
-  unrated: { borderWidth: 1, borderStyle: 'dashed', borderColor: color.muted, backgroundColor: color.paper },
+  unrated: {
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: color.muted,
+    backgroundColor: color.paper,
+  },
   scored: { backgroundColor: color.tealSoft },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  score: { fontSize: 20, fontWeight: '700', color: color.teal, minWidth: 32, fontVariant: ['tabular-nums'] },
+  score: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: color.teal,
+    minWidth: 32,
+    fontVariant: ['tabular-nums'],
+  },
   scoreProminent: { fontSize: 30 },
   track: { height: 6, borderRadius: 3, backgroundColor: color.card, overflow: 'hidden' },
   fill: { height: 6, borderRadius: 3, backgroundColor: color.teal },

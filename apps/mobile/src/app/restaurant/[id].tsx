@@ -38,13 +38,20 @@ export default function RestaurantScreen() {
     return (
       <Screen testID="restaurant-screen">
         <ErrorText testID="restaurant-error">{errorMessage(detail.error)}</ErrorText>
-        <Button label="Try again" variant="secondary" onPress={() => detail.refetch()} testID="restaurant-retry" />
+        <Button
+          label="Try again"
+          variant="secondary"
+          onPress={() => detail.refetch()}
+          testID="restaurant-retry"
+        />
       </Screen>
     );
   }
 
   const { restaurant, dishes } = detail.data;
-  const known = profile.data?.cuisinesTried.some((c) => c.toLowerCase() === restaurant.cuisine.toLowerCase());
+  const known = profile.data?.cuisinesTried.some(
+    (c) => c.toLowerCase() === restaurant.cuisine.toLowerCase(),
+  );
   const variant = known ? 'familiar' : 'unfamiliar';
   const lines = shortlists[restaurant.id] ?? [];
   const shown = visibleDishes(dishes, { spice, adventure, sort });
@@ -90,8 +97,8 @@ export default function RestaurantScreen() {
         <View style={styles.chips}>
           <Chip
             label={sort === 'match' ? 'Sorted by best match' : 'Sort by best match'}
-          selected={sort === 'match'}
-          onPress={() => setSort(sort === 'match' ? 'menu' : 'match')}
+            selected={sort === 'match'}
+            onPress={() => setSort(sort === 'match' ? 'menu' : 'match')}
             testID="sort-toggle"
           />
         </View>
@@ -115,7 +122,10 @@ export default function RestaurantScreen() {
               inOrder={lines.find((l) => l.dishId === d.id)?.qty ?? 0}
               onAdd={() => addToShortlist(restaurant.id, d)}
               onFeedback={() =>
-                router.push({ pathname: '/feedback/[dishId]', params: { dishId: d.id, restaurantId: restaurant.id } })
+                router.push({
+                  pathname: '/feedback/[dishId]',
+                  params: { dishId: d.id, restaurantId: restaurant.id },
+                })
               }
             />
           ))

@@ -17,7 +17,13 @@ const scan: ScanResult = {
   dishes: [
     { tempId: 'a', nativeName: 'Kitfo', price: '$18', rawText: 'Kitfo 18', confidence: 'high' },
     { tempId: 'b', nativeName: 'Doro Wot', price: null, rawText: 'Doro W?t', confidence: 'low' },
-    { tempId: 'c', nativeName: 'Open daily 11-10', price: null, rawText: 'Open daily 11-10', confidence: 'low' },
+    {
+      tempId: 'c',
+      nativeName: 'Open daily 11-10',
+      price: null,
+      rawText: 'Open daily 11-10',
+      confidence: 'low',
+    },
   ],
 };
 

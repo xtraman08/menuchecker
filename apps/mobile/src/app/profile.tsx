@@ -39,7 +39,9 @@ export default function Profile() {
       testID="profile-screen"
       footer={
         <View style={styles.footer}>
-          {save.isError ? <ErrorText testID="profile-save-error">{errorMessage(save.error)}</ErrorText> : null}
+          {save.isError ? (
+            <ErrorText testID="profile-save-error">{errorMessage(save.error)}</ErrorText>
+          ) : null}
           {save.isSuccess ? (
             <Text style={type.small} testID="profile-saved">
               Saved. Match scores update with your new answers.
@@ -56,7 +58,8 @@ export default function Profile() {
     >
       {current.data === null ? (
         <Text style={type.body} testID="profile-empty">
-          You haven't set up a taste profile yet. Until you do, every dish shows "Still learning your taste".
+          You haven't set up a taste profile yet. Until you do, every dish shows "Still learning
+          your taste".
         </Text>
       ) : null}
       <TasteProfileForm
@@ -71,5 +74,11 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  footer: { borderTopWidth: 1, borderTopColor: color.line, backgroundColor: color.card, padding: space.lg, gap: space.sm },
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: color.line,
+    backgroundColor: color.card,
+    padding: space.lg,
+    gap: space.sm,
+  },
 });

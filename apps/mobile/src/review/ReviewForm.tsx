@@ -63,7 +63,13 @@ export function ReviewForm({
       </View>
 
       <View style={{ gap: space.md }}>
-        <Field label="Restaurant name" value={name} onChangeText={setName} maxLength={120} testID="review-restaurant-name" />
+        <Field
+          label="Restaurant name"
+          value={name}
+          onChangeText={setName}
+          maxLength={120}
+          testID="review-restaurant-name"
+        />
         <Field
           label="Cuisine"
           value={cuisine}
@@ -102,7 +108,11 @@ export function ReviewForm({
         <View style={{ gap: space.sm }} testID="review-discarded-list">
           <Text style={type.label}>Discarded</Text>
           {discarded.map((item) => (
-            <View key={item.tempId} style={styles.discardedRow} testID={`review-discarded-${item.tempId}`}>
+            <View
+              key={item.tempId}
+              style={styles.discardedRow}
+              testID={`review-discarded-${item.tempId}`}
+            >
               <Text style={[type.body, { flex: 1, textDecorationLine: 'line-through' }]}>
                 {item.nativeName || 'Unnamed dish'}
               </Text>
@@ -118,12 +128,14 @@ export function ReviewForm({
       ) : null}
 
       <View style={{ gap: space.sm }}>
-        {triedSave && blocker ? <ErrorText testID="review-save-blocker">{blocker}</ErrorText> : null}
+        {triedSave && blocker ? (
+          <ErrorText testID="review-save-blocker">{blocker}</ErrorText>
+        ) : null}
         {saveError ? <ErrorText testID="review-save-error">{saveError}</ErrorText> : null}
         {saving ? (
           <Text style={type.small} testID="review-saving">
-            Saving and explaining {active.length} {active.length === 1 ? 'dish' : 'dishes'}. This can take up to a
-            minute.
+            Saving and explaining {active.length} {active.length === 1 ? 'dish' : 'dishes'}. This
+            can take up to a minute.
           </Text>
         ) : null}
         <Button label="Save menu" onPress={save} loading={saving} testID="review-save" />
@@ -150,12 +162,23 @@ function ReviewRow({
   const id = item.tempId;
   const badge = BADGE_STYLE[item.confidence];
   return (
-    <View style={[styles.row, item.confidence === 'low' && { borderColor: color.chili }]} testID={`review-item-${id}`}>
+    <View
+      style={[styles.row, item.confidence === 'low' && { borderColor: color.chili }]}
+      testID={`review-item-${id}`}
+    >
       <View style={styles.rowTop}>
-        <Text style={[styles.badge, { backgroundColor: badge.bg, color: badge.fg }]} testID={`review-badge-${id}`}>
+        <Text
+          style={[styles.badge, { backgroundColor: badge.bg, color: badge.fg }]}
+          testID={`review-badge-${id}`}
+        >
           {badgeLabel[item.confidence]}
         </Text>
-        <Button label="Discard" variant="quiet" onPress={onDiscard} testID={`review-discard-${id}`} />
+        <Button
+          label="Discard"
+          variant="quiet"
+          onPress={onDiscard}
+          testID={`review-discard-${id}`}
+        />
       </View>
       <View style={styles.inputs}>
         <TextInput

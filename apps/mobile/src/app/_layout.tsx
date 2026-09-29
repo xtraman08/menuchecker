@@ -31,7 +31,10 @@ export default function RootLayout() {
             <Stack.Screen name="restaurant/[id]" options={{ title: 'Menu' }} />
             <Stack.Screen name="scan" options={{ title: 'Scan a menu' }} />
             <Stack.Screen name="review" options={{ title: 'Check the dishes' }} />
-            <Stack.Screen name="feedback/[dishId]" options={{ title: 'Rate this dish', presentation: 'modal' }} />
+            <Stack.Screen
+              name="feedback/[dishId]"
+              options={{ title: 'Rate this dish', presentation: 'modal' }}
+            />
             <Stack.Screen name="profile" options={{ title: 'Taste profile' }} />
           </Stack>
         </AppStateProvider>

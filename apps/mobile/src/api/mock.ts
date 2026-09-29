@@ -41,8 +41,22 @@ function dish(
 
 function seed() {
   const restaurants: Restaurant[] = [
-    { id: 'r-habesha', name: 'Habesha Kitchen', address: '12 Market St', cuisine: 'Ethiopian', createdBy: MOCK_USER, createdAt: EPOCH },
-    { id: 'r-bistro', name: 'Le Petit Bistro', address: '4 Rue Road', cuisine: 'French', createdBy: MOCK_USER, createdAt: EPOCH },
+    {
+      id: 'r-habesha',
+      name: 'Habesha Kitchen',
+      address: '12 Market St',
+      cuisine: 'Ethiopian',
+      createdBy: MOCK_USER,
+      createdAt: EPOCH,
+    },
+    {
+      id: 'r-bistro',
+      name: 'Le Petit Bistro',
+      address: '4 Rue Road',
+      cuisine: 'French',
+      createdBy: MOCK_USER,
+      createdAt: EPOCH,
+    },
   ];
   const dishes: MockDish[] = [
     dish('r-habesha', 'd-kitfo', {
@@ -132,11 +146,23 @@ function computeMatch(
   profile: TasteProfile | null,
 ): Pick<DishCard, 'matchScore' | 'matchState' | 'matchExplanation' | 'matchExplanationKind'> {
   const volume = d.feedbackUp + d.feedbackDown;
-  if (!profile || volume < 3) return { matchScore: null, matchState: 'unrated', matchExplanation: null, matchExplanationKind: null };
+  if (!profile || volume < 3)
+    return {
+      matchScore: null,
+      matchState: 'unrated',
+      matchExplanation: null,
+      matchExplanationKind: null,
+    };
   const state = volume >= 10 ? 'confident' : 'preliminary';
   for (const r of profile.dietaryRestrictions) {
     const hit = d.ingredients.find((i) => DIET_CONFLICTS[r.toLowerCase()]?.includes(i));
-    if (hit) return { matchScore: 0, matchState: state, matchExplanation: `Contains ${hit}, which doesn't fit ${r}`, matchExplanationKind: 'dietary' };
+    if (hit)
+      return {
+        matchScore: 0,
+        matchState: state,
+        matchExplanation: `Contains ${hit}, which doesn't fit ${r}`,
+        matchExplanationKind: 'dietary',
+      };
   }
   const spiceFit = 1 - Math.max(0, d.spice - profile.spiceTolerance) / 3;
   const fav = d.ingredients.filter((i) => profile.favoriteIngredients.includes(i)).length;
@@ -190,9 +216,27 @@ export function createMockApi(): Api {
         scanId: `scan-${++n}`,
         restaurantGuess: { name: 'Anatolia Grill', cuisine: 'Turkish' },
         dishes: [
-          { tempId: 't1', nativeName: 'İskender Kebap', price: '$19', rawText: 'İskender Kebap 19', confidence: 'high' },
-          { tempId: 't2', nativeName: 'Mantı', price: '$15', rawText: 'Mantı ........ 15', confidence: 'high' },
-          { tempId: 't3', nativeName: 'Lahmac', price: null, rawText: 'Lahmac(un) 9?', confidence: 'low' },
+          {
+            tempId: 't1',
+            nativeName: 'İskender Kebap',
+            price: '$19',
+            rawText: 'İskender Kebap 19',
+            confidence: 'high',
+          },
+          {
+            tempId: 't2',
+            nativeName: 'Mantı',
+            price: '$15',
+            rawText: 'Mantı ........ 15',
+            confidence: 'high',
+          },
+          {
+            tempId: 't3',
+            nativeName: 'Lahmac',
+            price: null,
+            rawText: 'Lahmac(un) 9?',
+            confidence: 'low',
+          },
         ],
       };
     },
@@ -212,7 +256,8 @@ export function createMockApi(): Api {
           nativeName: d.nativeName,
           price: d.price,
           anchor: `Similar to a dish you may know — ${d.nativeName} (mock decode)`,
-          description: 'Mock description: the real API asks Claude to explain ingredients and preparation.',
+          description:
+            'Mock description: the real API asks Claude to explain ingredients and preparation.',
           texture: 'Varies',
           adventurousness: 2,
           confidence: 'low',

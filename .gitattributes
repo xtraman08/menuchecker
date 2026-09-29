@@ -1,0 +1,7 @@
+# Keep LF in the repo and working tree so files copied into Linux containers
+# (shell scripts, SQL, nginx config) behave the same on Windows checkouts.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.heic binary

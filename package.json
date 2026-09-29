@@ -21,15 +21,18 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run test -w @fare/shared -w @fare/db -w @fare/api -w @fare/mobile --if-present",
+    "test:integration": "node scripts/run-ws.mjs test:integration",
     "test:e2e": "node scripts/e2e.mjs",
     "db:up": "docker compose up -d --wait db",
-    "db:migrate": "npm run migrate -w db",
-    "db:seed": "npm run seed -w db",
+    "db:migrate": "node --env-file-if-exists=.env db/scripts/migrate.mjs",
+    "db:seed": "node --env-file-if-exists=.env db/scripts/seed.mjs",
     "db:reset": "node scripts/reset-db.mjs",
     "docker:build": "docker compose build",
-    "docker:up": "docker compose up -d --wait",
-    "docker:down": "docker compose down"
+    "docker:up": "docker compose up -d --wait db api web",
+    "docker:seed": "docker compose run --rm seed",
+    "docker:down": "docker compose down",
+    "wait-for": "node scripts/wait-for.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -37,7 +40,7 @@
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.12.0",
     "prettier": "^3.9.9",
-    "typescript": "~5.9",
+    "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.0"
   }
 }

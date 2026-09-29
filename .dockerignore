@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.expo
+**/web-build
+**/playwright-report
+**/test-results
+.git
+.github
+.claude
+.env
+.env.*
+!.env.example
+*.log

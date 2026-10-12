@@ -4,7 +4,7 @@
 
 A mobile app that tells a diner **what a dish actually is** the moment they look at a menu in a cuisine they don't know (Ethiopian, Turkish, Indian, Mexican, Chinese, etc.).
 
-**The problem is a knowledge deficit, not choice overload.** People can't express preferences until they understand what they're looking at. So the app is **both** an *instant comprehension layer* **and** a *recommendation / preference-matching engine* — comprehension comes first, sequentially, then preference matching builds on top of it once a dish is understood.
+**The problem is a knowledge deficit, not choice overload.** People can't express preferences until they understand what they're looking at. So the app is **both** an _instant comprehension layer_ **and** a _recommendation / preference-matching engine_ — comprehension comes first, sequentially, then preference matching builds on top of it once a dish is understood.
 
 **MVP promise:** point the camera at a menu (or open a saved restaurant) and every dish is instantly decoded — what it looks like, what it's like, how spicy, how adventurous — **and** ranked by how well it's likely to match the diner, once there's enough signal to rank it.
 
@@ -23,21 +23,21 @@ A mobile app that tells a diner **what a dish actually is** the moment they look
 
 Fields per dish:
 
-| Field | Purpose |
-|---|---|
-| `native_name` | Name as printed on the menu |
-| `photo_url` | Representative image (required in the UI; use a placeholder state if missing) |
-| `anchor` | One line: "Similar to X — <what it is>" |
-| `description` | Plain-language ingredients and preparation |
-| `spice` | 0–3 |
-| `texture` | Short plain phrase, e.g. "Saucy, fall-apart" |
-| `adventurousness` | 1–3 (familiar to adventurous) |
-| `note` | Optional honest tip, e.g. "Ask for it cooked if raw isn't your thing", "Vegan" |
-| `price` | As printed on the menu |
-| `source` | `ai_generated` / `diner_refined` / `restaurant_verified` |
-| `confidence` | `high` / `low` |
-| `match_score` | 0–100, or `null` when there isn't enough signal yet (see below) |
-| `match_state` | `unrated` (no signal yet) / `preliminary` (light signal) / `confident` (enough signal to trust) |
+| Field             | Purpose                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| `native_name`     | Name as printed on the menu                                                                     |
+| `photo_url`       | Representative image (required in the UI; use a placeholder state if missing)                   |
+| `anchor`          | One line: "Similar to X — <what it is>"                                                         |
+| `description`     | Plain-language ingredients and preparation                                                      |
+| `spice`           | 0–3                                                                                             |
+| `texture`         | Short plain phrase, e.g. "Saucy, fall-apart"                                                    |
+| `adventurousness` | 1–3 (familiar to adventurous)                                                                   |
+| `note`            | Optional honest tip, e.g. "Ask for it cooked if raw isn't your thing", "Vegan"                  |
+| `price`           | As printed on the menu                                                                          |
+| `source`          | `ai_generated` / `diner_refined` / `restaurant_verified`                                        |
+| `confidence`      | `high` / `low`                                                                                  |
+| `match_score`     | 0–100, or `null` when there isn't enough signal yet (see below)                                 |
+| `match_state`     | `unrated` (no signal yet) / `preliminary` (light signal) / `confident` (enough signal to trust) |
 
 Card layout order: **photo + native name + price → anchor line → description → spice / texture / adventurousness → note → match indicator (or "still learning your taste" state) → add-to-order.**
 
@@ -46,6 +46,7 @@ The match indicator is a secondary visual element to the anchor/photo, not a rep
 ## 4. MVP scope
 
 ### In
+
 1. **Scan a menu** — camera capture or photo library, OCR + AI parsing into structured dishes.
 2. **Review and correct** — editable list of parsed dishes with confidence badges (`Looks good` / `Check this` / `Manual entry`), discard and restore, manual add.
 3. **Decode** — AI generates the first-pass dish card fields for every parsed dish.
@@ -57,6 +58,7 @@ The match indicator is a secondary visual element to the anchor/photo, not a rep
 9. **Preference matching** — a per-dish match score computed from the diner's taste profile plus their own and other diners' feedback on that dish. Shows an honest "unrated" state until there's enough signal (see section 5 for the threshold).
 
 ### Out (later)
+
 - Group swipe-to-decide / group order matching
 - Restaurant-owner claim dashboard
 - Delivery-platform / website menu import
@@ -78,13 +80,17 @@ The match indicator is a secondary visual element to the anchor/photo, not a rep
 
 **Data flow (matching):** taste profile (onboarding + edits) + a diner's own dish feedback + aggregate feedback on that dish → match score computed server-side per diner per dish → cached in `dish_matches`, recomputed when the profile or relevant feedback changes. A dish shows `unrated` until the diner has a taste profile **and** the dish has minimum feedback volume (threshold TBD, see open questions); `preliminary` once a first score exists; `confident` past a second, higher threshold.
 
-## 6. Proposed tech stack (assumptions — confirm or change)
+## 6. Tech stack (confirmed 2026-09-29; supersedes the original Supabase proposal)
 
-- **App:** React Native with Expo, TypeScript, Expo Router
-- **Backend:** Supabase (Postgres, auth, storage, edge functions)
-- **AI:** Claude API (vision for menu parsing, text for dish decoding), called **only from a backend function**, never from the app
-- **State/data:** TanStack Query
-- **Testing:** Jest + React Native Testing Library; Maestro for a basic end-to-end flow
+npm-workspaces monorepo. Layout, ownership and the API contract live in `docs/TEAM_PLAN.md`.
+
+- **App (`apps/mobile`):** React Native with Expo (SDK 57), TypeScript, Expo Router, TanStack Query. Must also run on Expo web (E2E runs against it).
+- **Shared types (`packages/shared`):** zod schemas + TS types for every DTO; match weights/thresholds in `matchConfig.ts`.
+- **API (`services/api`):** Fastify (TypeScript), anonymous JWT auth, sharp re-encode (strips EXIF/GPS), per-user + per-IP rate limits, rules-based match engine.
+- **Database (`db/`):** Postgres 16, plain-SQL migrations, RLS default-deny on every table; API connects as `fare_app` (no BYPASSRLS) and sets `app.user_id` per transaction.
+- **AI (`services/api/src/llm`):** Claude API via `@anthropic-ai/sdk`, server-side only; model from `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`); structured output validated with zod, one retry, then fail.
+- **Testing:** Vitest (api/shared/db), Jest + React Native Testing Library (mobile), Playwright E2E (`e2e/`) against the Docker stack using the **real** Claude API.
+- **Infra:** Docker Compose (db, migrate, api, web via nginx), cross-platform Node scripts in `scripts/`, GitHub Actions CI (`.github/workflows/ci.yml`).
 
 ## 7. Security and privacy requirements
 
@@ -99,6 +105,7 @@ The match indicator is a secondary visual element to the anchor/photo, not a rep
 ## 8. Reference prototype
 
 `menu-match-app.html` is a single-file interactive prototype and the visual/behavioural reference. It contains:
+
 - Iteration 1: bistro menu with filters, match/value dial, order bar (familiar-cuisine variant; this dial is the starting point for the MVP match indicator)
 - Iteration 2: scan → scanning progress → review/edit flow with confidence badges, discard/restore, "unrated" state
 - Iteration 3: Ethiopian venue with the instant-knowledge card (photo-first, anchor line, spice/texture/adventurousness, notes; no dial was shown here because there was no taste-profile data yet in that mock — in the real MVP this card gains an "unrated" match indicator instead of omitting it)
@@ -109,15 +116,22 @@ Port the **flows and card design**, not the HTML. The canonical MVP dish card me
 
 ## 9. Repository state & setup commands
 
-This repository is currently **greenfield** — no app code, framework, or build/test tooling has been scaffolded yet. Do not invent or assume commands beyond what's below.
+All commands run from the repo root (Node 24, npm 11, Docker). Secrets live in `.env` (copy of `.env.example`; never committed). `ANTHROPIC_API_KEY` is required for scan/decode and for the E2E scan specs.
 
-- Once the app is scaffolded per the stack in section 6 (e.g. via `npx create-expo-app`), update this section with the real, working commands for:
-  - Install: e.g. `npm install`
-  - Run/dev: e.g. `npx expo start`
-  - Lint/typecheck: e.g. `npm run lint`, `npm run typecheck`
-  - Test: e.g. `npm test` (Jest + React Native Testing Library), plus the Maestro flow command
-  - Build: platform-specific build/EAS commands
-- Keep this section accurate as tooling changes — an outdated command here is worse than no command.
+| Task                       | Command                                                                                                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First-time setup           | `npm run setup` (creates/completes `.env` with a generated `JWT_SECRET`, installs deps + Playwright Chromium; `--skip-browsers`; `--pull-from-mirror` if Docker Hub is unreachable) |
+| Full stack in Docker       | `npm run docker:build`, `npm run docker:up` (db + migrate + api :4000 + web :8080), `npm run docker:seed`, `npm run docker:down`                                                    |
+| Hot-reload dev             | `npm run dev` (db in Docker, API via tsx watch, Expo web on host)                                                                                                                   |
+| Mobile app only            | `npm run web -w @fare/mobile`; native: `npx expo start` in `apps/mobile` (not yet verified on a device/simulator)                                                                   |
+| Database                   | `npm run db:up`, `npm run db:migrate`, `npm run db:seed`, `npm run db:reset` (drop volume → migrate → seed)                                                                         |
+| Lint / typecheck / format  | `npm run lint`, `npm run typecheck`, `npm run format` / `npm run format:check`                                                                                                      |
+| Unit tests                 | `npm test` (shared, db, api, mobile; excludes E2E)                                                                                                                                  |
+| DB + RLS integration tests | `npm run test:db` (starts Postgres in Docker)                                                                                                                                       |
+| E2E (Playwright)           | `npm run test:e2e` (isolated `fare-e2e` compose project, fresh DB each run; flags `--keep`, `--no-build`, `--skip-browser-install`; Playwright args after `-- --`)                  |
+| Web build                  | `npm run build:web -w @fare/mobile` (writes `apps/mobile/dist`; add `--clear` when changing `EXPO_PUBLIC_API_URL`)                                                                  |
+
+Native store builds (EAS) are not set up yet. Keep this section accurate as tooling changes — an outdated command here is worse than no command.
 
 ## 10. Working agreement for Claude
 
@@ -137,7 +151,7 @@ This repository is currently **greenfield** — no app code, framework, or build
 - Feedback threshold for promoting a dish from AI-generated to diner-refined.
 - Launch cuisines and city for the first release.
 - Dietary and allergen info: out of MVP, but if shown, it must carry a clear "verify with the restaurant" caveat.
-- Exact match-score formula for MVP: simple weighted rule (dietary fit + spice fit + ingredient overlap + aggregate liked-rate) is the likely starting point — confirm before building.
-- Minimum feedback volume to move a dish from `unrated` → `preliminary` → `confident`.
+- Exact match-score formula for MVP: **placeholder in use** (`packages/shared/src/matchConfig.ts`) — dietary fit as a hard filter (missing tag = conflict), then spice 35% / ingredients 35% / aggregate liked-rate 30%. Revisit with real data.
+- Minimum feedback volume to move a dish from `unrated` → `preliminary` → `confident`: **placeholder in use** — 3 / 10 feedback entries (plus the diner has a taste profile).
 - Onboarding flow for the taste profile: how many questions before first use, and what's skippable.
 - Whether the match score should ever influence sort order of the menu by default, or only be shown per-card with sorting as an explicit user action.

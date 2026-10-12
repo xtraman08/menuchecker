@@ -1,0 +1,20 @@
+// DTOs come from packages/shared (owned by backend). Re-exported here so screens import one path.
+export type {
+  ApiError as ApiErrorBody,
+  Confidence,
+  CreateRestaurantRequestInput as CreateRestaurantInput,
+  CreateRestaurantResponse as CreateRestaurantResult,
+  DietaryRestriction,
+  DishCard,
+  DishSource,
+  FeedbackRequest as FeedbackInput,
+  MatchState,
+  ParseConfidence,
+  ParsedDish,
+  Restaurant,
+  RestaurantDetail,
+  RestaurantSummary,
+  ReviewedDishInput as ReviewedDish,
+  ScanResponse as ScanResult,
+  TasteProfile,
+} from '@fare/shared';

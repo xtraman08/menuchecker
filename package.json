@@ -1,0 +1,46 @@
+{
+  "name": "fare",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fare - menu comprehension & match app (monorepo)",
+  "workspaces": [
+    "packages/*",
+    "db",
+    "services/*",
+    "apps/*",
+    "e2e"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test -w @fare/shared -w @fare/db -w @fare/api -w @fare/mobile --if-present",
+    "test:db": "node scripts/test-db.mjs",
+    "test:e2e": "node scripts/e2e.mjs",
+    "db:up": "docker compose up -d --wait db",
+    "db:migrate": "node --env-file-if-exists=.env db/scripts/migrate.mjs",
+    "db:seed": "node --env-file-if-exists=.env db/scripts/seed.mjs",
+    "db:reset": "node scripts/reset-db.mjs",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d --wait db api web",
+    "docker:seed": "docker compose run --rm seed",
+    "docker:down": "docker compose down",
+    "wait-for": "node scripts/wait-for.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0"
+  }
+}

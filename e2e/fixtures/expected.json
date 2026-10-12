@@ -1,0 +1,10 @@
+{
+  "ethiopian-menu.png": {
+    "restaurant": "Addis Table",
+    "dishes": ["Kitfo", "Doro Wat", "Awaze Tibs", "Shiro", "Misir Wot", "Gomen"]
+  },
+  "turkish-menu.png": {
+    "restaurant": "Lokanta Anadolu",
+    "dishes": ["Ezme", "Mercimek Çorbası", "İskender Kebap", "Adana Kebap", "Mantı", "Künefe"]
+  }
+}

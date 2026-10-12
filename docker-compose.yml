@@ -1,0 +1,95 @@
+# Fare local stack: Postgres + one-shot migrations + API + Expo web (nginx).
+#   docker compose up -d --wait        # db, migrate, api, web
+#   docker compose run --rm seed       # load seed data (profile "tools")
+# Secrets come only from .env (copy .env.example; `npm run setup` does it).
+name: fare
+
+x-db-env: &db-env
+  DATABASE_URL: postgres://fare_app:fare_app@db:5432/fare
+  DATABASE_MIGRATE_URL: postgres://fare_owner:fare_owner@db:5432/fare
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: fare
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # -h forces TCP so the check only passes once the init scripts are done
+      # (during init, postgres listens on the unix socket only).
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U postgres -d fare']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+      target: migrate
+    image: fare-migrate
+    environment: *db-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+
+  seed:
+    image: fare-migrate
+    profiles: [tools]
+    command: ['node', 'db/scripts/seed.mjs']
+    environment: *db-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+      target: runtime
+    image: fare-api
+    environment:
+      <<: *db-env
+      NODE_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5-5}
+      RATE_LIMIT_SCAN_PER_HOUR: ${RATE_LIMIT_SCAN_PER_HOUR:-20}
+      RATE_LIMIT_DECODE_PER_HOUR: ${RATE_LIMIT_DECODE_PER_HOUR:-30}
+      RATE_LIMIT_AUTH_PER_HOUR: ${RATE_LIMIT_AUTH_PER_HOUR:-30}
+      RATE_LIMIT_GLOBAL_PER_MINUTE: ${RATE_LIMIT_GLOBAL_PER_MINUTE:-300}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-8000000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+    ports:
+      - '${API_PORT:-4000}:4000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/mobile/Dockerfile.web
+      args:
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:4000}
+    image: fare-web
+    ports:
+      - '${WEB_PORT:-8080}:8080'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:
